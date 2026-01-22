@@ -19,15 +19,6 @@ func main() {
 	// обработать ошибку существование директории
 	_ = os.MkdirAll(baseDir, 0755)
 
-	// // Статика: /static/style.css
-	// fs := http.FileServer(http.Dir("./static"))
-	// http.Handle("/static/", http.StripPrefix("/static/", fs)) // типовой способ. [web:30][web:34]
-
-	// // HTML
-	// http.HandleFunc("/", handleIndex)
-
-	// API
-	//http.HandleFunc("/api/list", handleListDirectory)
 	http.HandleFunc("/api/download", handleDownload)
 
 	// Запуск HTTP сервера
@@ -102,6 +93,7 @@ func handleDownload(w http.ResponseWriter, r *http.Request) {
 }
 
 func addFileToZip(zw *zip.Writer, filePath, archivePath string) error {
+	log.Printf("Zip: открытие файла %s", filePath)
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -124,8 +116,14 @@ func addFileToZip(zw *zip.Writer, filePath, archivePath string) error {
 	if err != nil {
 		return err
 	}
-	_, err = io.Copy(w, file)
-	return err
+
+	n, err := io.Copy(w, file)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Zip: файл добавлен %s (%d байт записано)", h.Name, n)
+	return nil
 }
 
 func addDirToZip(zw *zip.Writer, dirPath, archivePath string) error {
