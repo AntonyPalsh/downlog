@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -112,11 +113,11 @@ func parseRFC3339(s string) (time.Time, error) {
 	return time.Parse(time.RFC3339, s)
 }
 
-func validationReguest(w http.ResponseWriter, r *http.Request) {
+func validationReguest(w http.ResponseWriter, r *http.Request) (string, error) {
 
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
+		return "", fmt.Errorf("method not allowed")
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -132,27 +133,31 @@ func validationReguest(w http.ResponseWriter, r *http.Request) {
 	var in Reguest
 	if err := dec.Decode(&in); err != nil {
 		http.Error(w, "invalid_json Invalid JSON body: ", http.StatusBadRequest)
-		return
+		return "", fmt.Errorf("invalid_json Invalid JSON body")
 	}
 
 	// 3) если после первого JSON-объекта в body ещё мусор/второй объект — считаем это ошибкой формата.
 	if dec.More() {
 		http.Error(w, "invalid_json Unexpected extra JSON content", http.StatusBadRequest)
-		return
+		return "", fmt.Errorf("invalid_json Unexpected extra JSON content")
 	}
 
-	_, err := parseRFC3339(in.Timestamp)
+	s, err := parseRFC3339(in.Timestamp)
 	if err != nil {
 		http.Error(w, "invalid_timestamp imestamp must be RFC3339, e.g. 2026-01-23T11:07:00+03:00", http.StatusBadRequest)
-		return
+		return "", fmt.Errorf("invalid_timestamp imestamp must be RFC3339")
 	}
-
+	return s.Format(time.RFC3339), nil
 }
 
 func catalinalog(w http.ResponseWriter, r *http.Request) {
-	validationReguest(w, r)
 
-	log.Printf("🚀 endpoint принят")
+	ts, err := validationReguest(w, r)
+	if err != nil {
+		log.Printf("❌ Ошибка валидации JSON: %s", err)
+		return
+	}
+	log.Printf("🚀 Timestamp: %v", ts)
 }
 
 func universelog(w http.ResponseWriter, r *http.Request) {
