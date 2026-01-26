@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -115,7 +116,7 @@ func validationReguest(w http.ResponseWriter, r *http.Request) (string, error) {
 
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return "", fmt.Errorf("method not allowed")
+		return "", fmt.Errorf("❌ method not allowed")
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -131,19 +132,19 @@ func validationReguest(w http.ResponseWriter, r *http.Request) (string, error) {
 	var in Reguest
 	if err := dec.Decode(&in); err != nil {
 		http.Error(w, "invalid_json Invalid JSON body: ", http.StatusBadRequest)
-		return "", fmt.Errorf("invalid_json Invalid JSON body")
+		return "", fmt.Errorf("❌ invalid_json Invalid JSON body")
 	}
 
 	// 3) если после первого JSON-объекта в body ещё мусор/второй объект — считаем это ошибкой формата.
 	if dec.More() {
 		http.Error(w, "invalid_json Unexpected extra JSON content", http.StatusBadRequest)
-		return "", fmt.Errorf("invalid_json Unexpected extra JSON content")
+		return "", fmt.Errorf("❌ invalid_json Unexpected extra JSON content")
 	}
 
 	s, err := parseRFC3339(in.Timestamp)
 	if err != nil {
 		http.Error(w, "invalid_timestamp imestamp must be RFC3339, e.g. 2026-01-23T11:07:00+03:00", http.StatusBadRequest)
-		return "", fmt.Errorf("invalid_timestamp imestamp must be RFC3339")
+		return "", fmt.Errorf("❌ invalid_timestamp imestamp must be RFC3339")
 	}
 	// преобразуем TimeStamp к виду в котором сохраняет файловая система и отправляем на выввод функции
 	return s.Format("2006-01-02"), nil
@@ -158,14 +159,13 @@ func catalinalog(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("🪤 Timestamp: %v", ts)
 
-	// Пример поиска файлов, измененных 26.01.2026, содержащих "log" в названии
 	files, err := findFiles(ts, "/var/log", "auth.log")
 	if err != nil {
-		fmt.Println("Ошибка:", err)
+		fmt.Println("❌ Ошибка:", err)
 		return
 	}
 
-	fmt.Println("Найденные файлы:")
+	fmt.Println("🧾 Найденные файлы:")
 	for _, f := range files {
 		fmt.Println(f)
 	}
@@ -183,11 +183,42 @@ func alltomcatlog(w http.ResponseWriter, r *http.Request) {
 
 func scanerslog(w http.ResponseWriter, r *http.Request) {
 
+	ts, err := validationReguest(w, r)
+	if err != nil {
+		log.Printf("❌ Ошибка валидации JSON: %s", err)
+		return
+	}
+	log.Printf("🪤 Timestamp: %v", ts)
+
+	// files, err := findFiles(ts, "/var/log", "auth.log")
+	// if err != nil {
+	// 	fmt.Println("❌ Ошибка:", err)
+	// 	return
+	// }
+
+	// fmt.Println("🧾 Найденные файлы:")
+	// for _, f := range files {
+	// 	fmt.Println(f)
+	// }
+
+	dirs, err := findDirs("2026-01-26", "/var/log")
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
+	fmt.Printf("Найдены %d directories:\n", len(dirs))
+	for _, dir := range dirs {
+		fmt.Println(dir)
+	}
+
+	handleDownload(w, dirs, "dir")
+
 }
 
 func handleDownload(w http.ResponseWriter, files []string, typef string) {
 
-	fmt.Println("вызов функции handleDownload")
+	// fmt.Println("вызов функции handleDownload")
 
 	w.Header().Set("Content-Type", "application/zip")
 	w.Header().Set("Content-Disposition", "attachment")
@@ -198,7 +229,7 @@ func handleDownload(w http.ResponseWriter, files []string, typef string) {
 		switch typef {
 		case "file":
 			if err := addFileToZip(zw, f); err != nil {
-				log.Printf("addFileToZip failed: path=%q err=%v", f, err)
+				log.Printf("🧾 addFileToZip failed: path=%q err=%v", f, err)
 				http.Error(w, "failed to add file to zip", http.StatusInternalServerError)
 				return
 			}
@@ -334,4 +365,54 @@ func stringContains(s, substr string) bool {
 		}
 	}
 	return false
+}
+
+// findDirs ищет директории, дата модификации которых совпадает с dateLog
+// dateLog ожидается в формате "2006-01-02" (ISO 8601 / YYYY-MM-DD)
+// Возвращает срез путей директорий и ошибку, если она произошла
+func findDirs(dateLog string, pathLogs string) ([]string, error) {
+
+	// Парсим целевую дату в формате YYYY-MM-DD
+	targetDate, err := time.Parse("2006-01-02", dateLog)
+	if err != nil {
+		return nil, fmt.Errorf("invalid date format: %w", err)
+	}
+
+	var result []string
+
+	// WalkDir - эффективный способ обхода директорий (Go 1.16+)
+	err = filepath.WalkDir(pathLogs, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			// Логируем ошибку доступа, но продолжаем обход
+			return nil
+		}
+
+		// Проверяем только директории (исключаем файлы)
+		if !d.IsDir() {
+			return nil
+		}
+
+		// Получаем информацию о файле для доступа к времени модификации
+		info, err := d.Info()
+		if err != nil {
+			return nil
+		}
+
+		// Сравниваем дату модификации с целевой датой
+		// Преобразуем обе даты в полночь для сравнения только по дате
+		modTime := info.ModTime()
+		modDate := time.Date(modTime.Year(), modTime.Month(), modTime.Day(), 0, 0, 0, 0, time.UTC)
+
+		if modDate.Equal(targetDate) {
+			result = append(result, path)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("error walking directory: %w", err)
+	}
+
+	return result, nil
 }
