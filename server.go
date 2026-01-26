@@ -145,7 +145,8 @@ func validationReguest(w http.ResponseWriter, r *http.Request) (string, error) {
 		http.Error(w, "invalid_timestamp imestamp must be RFC3339, e.g. 2026-01-23T11:07:00+03:00", http.StatusBadRequest)
 		return "", fmt.Errorf("invalid_timestamp imestamp must be RFC3339")
 	}
-	return s.Format(time.RFC3339), nil
+	// преобразуем TimeStamp к виду в котором сохраняет файловая система и отправляем на выввод функции
+	return s.Format("2006-01-02"), nil
 }
 
 func catalinalog(w http.ResponseWriter, r *http.Request) {
@@ -155,10 +156,10 @@ func catalinalog(w http.ResponseWriter, r *http.Request) {
 		log.Printf("❌ Ошибка валидации JSON: %s", err)
 		return
 	}
-	log.Printf("🚀 Timestamp: %v", ts)
+	log.Printf("🪤 Timestamp: %v", ts)
 
 	// Пример поиска файлов, измененных 26.01.2026, содержащих "log" в названии
-	files, err := findFiles("2026-01-26", "/var/log", "auth.log")
+	files, err := findFiles(ts, "/var/log", "auth.log")
 	if err != nil {
 		fmt.Println("Ошибка:", err)
 		return
@@ -189,7 +190,7 @@ func handleDownload(w http.ResponseWriter, files []string, typef string) {
 	fmt.Println("вызов функции handleDownload")
 
 	w.Header().Set("Content-Type", "application/zip")
-	w.Header().Set("Content-Disposition", "attachment; filename=download.zip")
+	w.Header().Set("Content-Disposition", "attachment")
 
 	zw := zip.NewWriter(w)
 
@@ -230,7 +231,9 @@ func addFileToZip(zw *zip.Writer, filePath string) error {
 	if err != nil {
 		return err
 	}
-	h.Name = strings.ReplaceAll(filePath, "\\", "/")
+	// берём весь путь и отделяем от него конечный файл для сохранения в архив
+	filename := filepath.Base(filePath)
+	h.Name = strings.ReplaceAll(filename, "\\", "/")
 	h.Method = zip.Deflate
 
 	w, err := zw.CreateHeader(h)
