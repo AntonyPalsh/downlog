@@ -17,14 +17,13 @@ import (
 
 // Config структура конфигурации
 type Config struct {
-	Port string
-	// UploadDir  string
-	// Update     string
-	// BackupAPP  string
-	// RestoreAPP string
-	// BackupBD   string
-	LimitMB   int64
-	ApiPrefix string
+	Port            string
+	LimitMB         int64
+	ApiPrefix       string
+	PathLogCatalina string
+	PathLogUnivers  string
+	PathLogScaners  string
+	PathLogTomcat   string
 }
 
 // Response структура ответа
@@ -50,8 +49,8 @@ func getEnv(key, defaultValue string) string {
 
 var cfg Config
 
-const baseDir = "./files"
-const port = ":8080"
+// const baseDir = "./files"
+// const port = ":8080"
 
 func init() {
 
@@ -63,14 +62,13 @@ func init() {
 	}
 
 	cfg = Config{
-		LimitMB: limitMB,
-		Port:    getEnv("UPT_PORT", ":8080"),
-		// UploadDir:  getEnv("UPT_PATH_PREFIX", "./uploads"),
-		// Update:     getEnv("UPT_SC_UPDATE", "lscpu"),
-		ApiPrefix: getEnv("UPT_URL_API_PREFIX", ""),
-		// BackupAPP:  getEnv("UPT_SC_BACKUP_APP", "who"),
-		// RestoreAPP: getEnv("UPT_SC_RESTORE_APP", "vmstat"),
-		// BackupBD:   getEnv("UPT_SC_BACKUP_BD", "lsblk"),
+		LimitMB:         limitMB,
+		Port:            getEnv("DL_PORT", ":8080"),
+		ApiPrefix:       getEnv("DL_URL_API_PREFIX", ""),
+		PathLogCatalina: getEnv("DL_CATALINA_LOG", "/app/edm/tomcat-9/logs/catalina"),
+		PathLogUnivers:  getEnv("DL_UNIVERS_LOG", "closed/universe_backend"),
+		PathLogScaners:  getEnv("DL_SCAN_LOG", "/app/edm/scan/logs"),
+		PathLogTomcat:   getEnv("DL_TOMCAT", "/app/edm/tomcat-9/logs"),
 	}
 
 	// if err := os.MkdirAll(cfg.UploadDir, 0750); err != nil {
@@ -87,7 +85,7 @@ func registerRoute(pattern string, handler http.HandlerFunc) {
 func main() {
 
 	// обработать ошибку существование директории
-	_ = os.MkdirAll(baseDir, 0755)
+	// _ = os.MkdirAll(baseDir, 0755)
 
 	// http.HandleFunc("/api/download", handleDownload)
 
@@ -97,9 +95,9 @@ func main() {
 	registerRoute(cfg.ApiPrefix+"/api/scaners", scanerslog)
 
 	// Запуск HTTP сервера
-	log.Printf("🚀 Сервер запущен на http://localhost:%s", port)
+	log.Printf("🚀 Сервер запущен на http://localhost:%s", cfg.Port)
 
-	if err := http.ListenAndServe(port, nil); err != nil {
+	if err := http.ListenAndServe(cfg.Port, nil); err != nil {
 		log.Fatalf("❌ Ошибка запуска сервера: %v", err)
 	}
 
@@ -158,6 +156,20 @@ func catalinalog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("🚀 Timestamp: %v", ts)
+
+	// Пример поиска файлов, измененных 26.01.2026, содержащих "log" в названии
+	files, err := findFiles("2026-01-26", "/var/log", "auth.log")
+	if err != nil {
+		fmt.Println("Ошибка:", err)
+		return
+	}
+
+	fmt.Println("Найденные файлы:")
+	for _, f := range files {
+		fmt.Println(f)
+	}
+
+	handleDownload(w, files, "file")
 }
 
 func universelog(w http.ResponseWriter, r *http.Request) {
@@ -172,72 +184,35 @@ func scanerslog(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// func handleDownload(w http.ResponseWriter, r *http.Request) {
-// 	if r.Method != http.MethodPost {
-// 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-// 		return
-// 	}
+func handleDownload(w http.ResponseWriter, files []string, typef string) {
 
-// 	// var req struct {
-// 	// 	Files []struct {
-// 	// 		Path string `json:"path"`
-// 	// 		Type string `json:"type"`
-// 	// 	} `json:"files"`
-// 	// }
+	fmt.Println("вызов функции handleDownload")
 
-// 	var req Reguest
+	w.Header().Set("Content-Type", "application/zip")
+	w.Header().Set("Content-Disposition", "attachment; filename=download.zip")
 
-// 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-// 		http.Error(w, "bad request decode json", http.StatusBadRequest)
-// 		return
-// 	}
+	zw := zip.NewWriter(w)
 
-// 	w.Header().Set("Content-Type", "application/zip")
-// 	w.Header().Set("Content-Disposition", "attachment; filename=download.zip")
+	for _, f := range files {
+		switch typef {
+		case "file":
+			if err := addFileToZip(zw, f); err != nil {
+				log.Printf("addFileToZip failed: path=%q err=%v", f, err)
+				http.Error(w, "failed to add file to zip", http.StatusInternalServerError)
+				return
+			}
+		case "dir":
+			if err := addDirToZip(zw, f, f); err != nil {
+				log.Printf("addFileToZip failed: path=%q err=%v", f, err)
+				http.Error(w, "failed to add Dir to zip", http.StatusInternalServerError)
+				return
+			}
+		}
+	}
+	defer zw.Close()
+}
 
-// 	zw := zip.NewWriter(w)
-// 	defer zw.Close()
-
-// 	base := filepath.Clean(baseDir)
-// 	// debug
-// 	// log.Printf("baseDir: %v", baseDir)
-// 	// log.Printf("base: %v", base)
-
-// 	for _, f := range req.Files {
-// 		// проверка не пришёл ли путь выходящий за директорию с логами
-// 		if !filepath.IsLocal(f.Path) {
-// 			log.Printf("path escapes baseDir: path=%q ", f.Path)
-// 			http.Error(w, "path escapes baseDir:", http.StatusInternalServerError)
-// 			return
-// 		}
-
-// 		fullFilePath := filepath.Clean(filepath.Join(baseDir, f.Path))
-
-// 		// debug
-// 		// log.Printf("f.Path: %v", f.Path)
-// 		// log.Printf("fullFilePath: %v", fullFilePath)
-
-// 		if !strings.HasPrefix(fullFilePath, base) {
-// 			continue
-// 		}
-// 		switch f.Type {
-// 		case "file":
-// 			if err := addFileToZip(zw, fullFilePath, f.Path); err != nil {
-// 				log.Printf("addFileToZip failed: path=%q err=%v", f.Path, err)
-// 				http.Error(w, "failed to add file to zip", http.StatusInternalServerError)
-// 				return
-// 			}
-// 		case "directory":
-// 			if err := addDirToZip(zw, fullFilePath, f.Path); err != nil {
-// 				log.Printf("addFileToZip failed: path=%q err=%v", f.Path, err)
-// 				http.Error(w, "failed to add Dir to zip", http.StatusInternalServerError)
-// 				return
-// 			}
-// 		}
-// 	}
-// }
-
-func addFileToZip(zw *zip.Writer, filePath, archivePath string) error {
+func addFileToZip(zw *zip.Writer, filePath string) error {
 
 	log.Printf("Zip: открытие файла %s", filePath)
 	file, err := os.Open(filePath)
@@ -255,7 +230,7 @@ func addFileToZip(zw *zip.Writer, filePath, archivePath string) error {
 	if err != nil {
 		return err
 	}
-	h.Name = strings.ReplaceAll(archivePath, "\\", "/")
+	h.Name = strings.ReplaceAll(filePath, "\\", "/")
 	h.Method = zip.Deflate
 
 	w, err := zw.CreateHeader(h)
@@ -279,16 +254,81 @@ func addDirToZip(zw *zip.Writer, dirPath, archivePath string) error {
 	}
 	for _, e := range entries {
 		fullFilePath := filepath.Join(dirPath, e.Name())
-		ap := strings.ReplaceAll(filepath.Join(archivePath, e.Name()), "\\", "/")
+		ap := strings.ReplaceAll(filepath.Join(dirPath, e.Name()), "\\", "/")
 		if e.IsDir() {
 			if err := addDirToZip(zw, fullFilePath, ap); err != nil {
 				return err
 			}
 		} else {
-			if err := addFileToZip(zw, fullFilePath, ap); err != nil {
+			if err := addFileToZip(zw, fullFilePath); err != nil {
 				return err
 			}
 		}
 	}
 	return nil
+}
+
+// findFiles ищет файлы в директории pathLogs, которые содержат nameFile в названии
+// и имеют время изменения соответствующее dateLog
+func findFiles(dateLog string, pathLogs string, nameFile string) ([]string, error) {
+	var foundFiles []string
+
+	// Парсим дату из строки
+	// Формат: "2006-01-02" (можно адаптировать)
+	targetDate, err := time.Parse("2006-01-02", dateLog)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка парсинга даты: %w", err)
+	}
+
+	// Получаем конец дня (23:59:59) для сравнения
+	nextDay := targetDate.AddDate(0, 0, 1)
+
+	// Ходим по директории
+	err = filepath.Walk(pathLogs, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Пропускаем директории
+		if info.IsDir() {
+			return nil
+		}
+
+		// Проверяем наличие nameFile в названии файла
+		if nameFile != "" && !contains(info.Name(), nameFile) {
+			return nil
+		}
+
+		// Проверяем дату изменения файла
+		modTime := info.ModTime()
+		if modTime.After(targetDate) && modTime.Before(nextDay) {
+			foundFiles = append(foundFiles, path)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("ошибка при обходе директории: %w", err)
+	}
+
+	if len(foundFiles) == 0 {
+		return nil, fmt.Errorf("файлы не найдены")
+	}
+
+	return foundFiles, nil
+}
+
+// contains проверяет, содержит ли строка haystack подстроку needle
+func contains(haystack, needle string) bool {
+	return len(needle) > 0 && (needle == "" || stringContains(haystack, needle))
+}
+
+func stringContains(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }

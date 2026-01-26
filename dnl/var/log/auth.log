@@ -1,0 +1,181 @@
+2026-01-26T09:06:09.485196+03:00 li-BRI-XX (systemd): pam_unix(systemd-user:session): session opened for user gdm(uid=120) by gdm(uid=0)
+2026-01-26T09:06:10.539739+03:00 li-BRI-XX polkitd[1016]: Registered Authentication Agent for unix-session:c1 (system bus name :1.36 [/usr/bin/gnome-shell], object path /org/freedesktop/PolicyKit1/AuthenticationAgent, locale ru_RU.UTF-8)
+2026-01-26T09:15:01.468183+03:00 li-BRI-XX CRON[2732]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T09:15:01.492899+03:00 li-BRI-XX CRON[2732]: pam_unix(cron:session): session closed for user root
+2026-01-26T09:16:30.833848+03:00 li-BRI-XX gdm-password]: gkr-pam: unable to locate daemon control file
+2026-01-26T09:16:30.833941+03:00 li-BRI-XX gdm-password]: gkr-pam: stashed password to try later in open session
+2026-01-26T09:16:30.892462+03:00 li-BRI-XX gdm-password]: pam_unix(gdm-password:session): session opened for user li(uid=1000) by li(uid=0)
+2026-01-26T09:16:30.920110+03:00 li-BRI-XX systemd-logind[1041]: New session 3 of user li.
+2026-01-26T09:16:30.936458+03:00 li-BRI-XX (systemd): pam_unix(systemd-user:session): session opened for user li(uid=1000) by li(uid=0)
+2026-01-26T09:16:31.141459+03:00 li-BRI-XX gdm-password]: gkr-pam: unlocked login keyring
+2026-01-26T09:16:31.535302+03:00 li-BRI-XX gnome-keyring-daemon[2790]: The Secret Service was already initialized
+2026-01-26T09:16:31.535483+03:00 li-BRI-XX gnome-keyring-daemon[2996]: discover_other_daemon: 1
+2026-01-26T09:16:31.535659+03:00 li-BRI-XX gnome-keyring-daemon[2998]: discover_other_daemon: 1
+2026-01-26T09:16:31.535766+03:00 li-BRI-XX gnome-keyring-daemon[2790]: The PKCS#11 component was already initialized
+2026-01-26T09:16:31.535916+03:00 li-BRI-XX gnome-keyring-daemon[3000]: discover_other_daemon: 1
+2026-01-26T09:16:32.166544+03:00 li-BRI-XX polkitd[1016]: Registered Authentication Agent for unix-session:3 (system bus name :1.80 [/usr/bin/gnome-shell], object path /org/freedesktop/PolicyKit1/AuthenticationAgent, locale ru_RU.UTF-8)
+2026-01-26T09:16:32.600712+03:00 li-BRI-XX gnome-keyring-daemon[2790]: asked to register item /org/freedesktop/secrets/collection/login/1, but it's already registered
+2026-01-26T09:16:32.932385+03:00 li-BRI-XX gdm-launch-environment]: pam_unix(gdm-launch-environment:session): session closed for user gdm
+2026-01-26T09:16:32.944845+03:00 li-BRI-XX systemd-logind[1041]: Session c1 logged out. Waiting for processes to exit.
+2026-01-26T09:16:32.958921+03:00 li-BRI-XX systemd-logind[1041]: Removed session c1.
+2026-01-26T09:16:32.963355+03:00 li-BRI-XX polkitd[1016]: Unregistered Authentication Agent for unix-session:c1 (system bus name :1.36, object path /org/freedesktop/PolicyKit1/AuthenticationAgent, locale ru_RU.UTF-8) (disconnected from bus)
+2026-01-26T09:16:43.044132+03:00 li-BRI-XX (sd-pam): pam_unix(systemd-user:session): session closed for user gdm
+2026-01-26T09:17:01.498646+03:00 li-BRI-XX CRON[4786]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T09:17:01.504484+03:00 li-BRI-XX CRON[4786]: pam_unix(cron:session): session closed for user root
+2026-01-26T09:17:34.614783+03:00 li-BRI-XX pkexec: pam_unix(polkit-1:session): session opened for user root(uid=0) by li(uid=1000)
+2026-01-26T09:17:34.615177+03:00 li-BRI-XX pkexec[4952]: li: Executing command [USER=root] [TTY=unknown] [CWD=/home/li] [COMMAND=/usr/lib/update-notifier/package-system-locked]
+2026-01-26T09:18:04.077474+03:00 li-BRI-XX polkitd[1016]: Reloading rules
+2026-01-26T09:18:04.077801+03:00 li-BRI-XX polkitd[1016]: Collecting garbage unconditionally...
+2026-01-26T09:18:04.077825+03:00 li-BRI-XX polkitd[1016]: Loading rules from directory /etc/polkit-1/rules.d
+2026-01-26T09:18:04.077839+03:00 li-BRI-XX polkitd[1016]: Loading rules from directory /usr/share/polkit-1/rules.d
+2026-01-26T09:18:04.080037+03:00 li-BRI-XX polkitd[1016]: Finished loading, compiling and executing 16 rules
+2026-01-26T09:18:04.080066+03:00 li-BRI-XX polkitd[1016]: Reloading rules
+2026-01-26T09:18:04.080082+03:00 li-BRI-XX polkitd[1016]: Collecting garbage unconditionally...
+2026-01-26T09:18:04.080100+03:00 li-BRI-XX polkitd[1016]: Loading rules from directory /etc/polkit-1/rules.d
+2026-01-26T09:18:04.080114+03:00 li-BRI-XX polkitd[1016]: Loading rules from directory /usr/share/polkit-1/rules.d
+2026-01-26T09:18:04.081038+03:00 li-BRI-XX polkitd[1016]: Finished loading, compiling and executing 16 rules
+2026-01-26T09:25:01.512476+03:00 li-BRI-XX CRON[6956]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T09:25:01.516148+03:00 li-BRI-XX CRON[6956]: pam_unix(cron:session): session closed for user root
+2026-01-26T09:30:01.525695+03:00 li-BRI-XX CRON[7101]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T09:30:01.527971+03:00 li-BRI-XX CRON[7101]: pam_unix(cron:session): session closed for user root
+2026-01-26T09:35:01.536901+03:00 li-BRI-XX CRON[7200]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T09:35:01.539937+03:00 li-BRI-XX CRON[7200]: pam_unix(cron:session): session closed for user root
+2026-01-26T09:35:17.325739+03:00 li-BRI-XX gdm-password]: gkr-pam: unlocked login keyring
+2026-01-26T09:45:01.549989+03:00 li-BRI-XX CRON[7684]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T09:45:01.553349+03:00 li-BRI-XX CRON[7684]: pam_unix(cron:session): session closed for user root
+2026-01-26T09:55:01.563837+03:00 li-BRI-XX CRON[8365]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T09:55:01.568325+03:00 li-BRI-XX CRON[8365]: pam_unix(cron:session): session closed for user root
+2026-01-26T09:57:49.431063+03:00 li-BRI-XX systemd-logind[1041]: Lid closed.
+2026-01-26T09:57:55.348390+03:00 li-BRI-XX systemd-logind[1041]: Lid opened.
+2026-01-26T10:05:01.578875+03:00 li-BRI-XX CRON[8652]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T10:05:01.637372+03:00 li-BRI-XX CRON[8652]: pam_unix(cron:session): session closed for user root
+2026-01-26T10:15:01.594838+03:00 li-BRI-XX CRON[8902]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T10:15:01.598359+03:00 li-BRI-XX CRON[8902]: pam_unix(cron:session): session closed for user root
+2026-01-26T10:17:01.604852+03:00 li-BRI-XX CRON[9016]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T10:17:01.609105+03:00 li-BRI-XX CRON[9016]: pam_unix(cron:session): session closed for user root
+2026-01-26T10:25:01.619174+03:00 li-BRI-XX CRON[9131]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T10:25:01.621280+03:00 li-BRI-XX CRON[9131]: pam_unix(cron:session): session closed for user root
+2026-01-26T10:30:01.630798+03:00 li-BRI-XX CRON[9202]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T10:30:01.633137+03:00 li-BRI-XX CRON[9202]: pam_unix(cron:session): session closed for user root
+2026-01-26T10:35:01.642422+03:00 li-BRI-XX CRON[9323]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T10:35:01.645943+03:00 li-BRI-XX CRON[9323]: pam_unix(cron:session): session closed for user root
+2026-01-26T10:45:01.656045+03:00 li-BRI-XX CRON[9510]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T10:45:01.676020+03:00 li-BRI-XX CRON[9510]: pam_unix(cron:session): session closed for user root
+2026-01-26T10:55:01.688962+03:00 li-BRI-XX CRON[9921]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T10:55:01.692686+03:00 li-BRI-XX CRON[9921]: pam_unix(cron:session): session closed for user root
+2026-01-26T11:02:02.580244+03:00 li-BRI-XX gnome-keyring-daemon[2790]: asked to register item /org/freedesktop/secrets/collection/login/1, but it's already registered
+2026-01-26T11:05:01.701911+03:00 li-BRI-XX CRON[13087]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T11:05:01.704518+03:00 li-BRI-XX CRON[13087]: pam_unix(cron:session): session closed for user root
+2026-01-26T11:15:01.713142+03:00 li-BRI-XX CRON[16381]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T11:15:01.717899+03:00 li-BRI-XX CRON[16381]: pam_unix(cron:session): session closed for user root
+2026-01-26T11:17:01.723570+03:00 li-BRI-XX CRON[17088]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T11:17:01.727202+03:00 li-BRI-XX CRON[17088]: pam_unix(cron:session): session closed for user root
+2026-01-26T11:25:01.738238+03:00 li-BRI-XX CRON[19847]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T11:25:01.741942+03:00 li-BRI-XX CRON[19847]: pam_unix(cron:session): session closed for user root
+2026-01-26T11:30:01.751180+03:00 li-BRI-XX CRON[21469]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T11:30:01.753190+03:00 li-BRI-XX CRON[21469]: pam_unix(cron:session): session closed for user root
+2026-01-26T11:34:40.896198+03:00 li-BRI-XX systemd-logind[1041]: Lid closed.
+2026-01-26T11:35:01.760844+03:00 li-BRI-XX CRON[23109]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T11:35:01.764475+03:00 li-BRI-XX CRON[23109]: pam_unix(cron:session): session closed for user root
+2026-01-26T11:45:01.774906+03:00 li-BRI-XX CRON[26243]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T11:45:01.836569+03:00 li-BRI-XX CRON[26243]: pam_unix(cron:session): session closed for user root
+2026-01-26T11:55:01.789279+03:00 li-BRI-XX CRON[29387]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T11:55:01.793229+03:00 li-BRI-XX CRON[29387]: pam_unix(cron:session): session closed for user root
+2026-01-26T12:05:01.805054+03:00 li-BRI-XX CRON[32559]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T12:05:01.809049+03:00 li-BRI-XX CRON[32559]: pam_unix(cron:session): session closed for user root
+2026-01-26T12:15:01.820792+03:00 li-BRI-XX CRON[35702]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T12:15:01.823650+03:00 li-BRI-XX CRON[35702]: pam_unix(cron:session): session closed for user root
+2026-01-26T12:17:01.828785+03:00 li-BRI-XX CRON[36364]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T12:17:01.831263+03:00 li-BRI-XX CRON[36364]: pam_unix(cron:session): session closed for user root
+2026-01-26T12:25:01.840375+03:00 li-BRI-XX CRON[38855]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T12:25:01.844239+03:00 li-BRI-XX CRON[38855]: pam_unix(cron:session): session closed for user root
+2026-01-26T12:30:01.853074+03:00 li-BRI-XX CRON[40435]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T12:30:01.915597+03:00 li-BRI-XX CRON[40435]: pam_unix(cron:session): session closed for user root
+2026-01-26T12:35:01.864645+03:00 li-BRI-XX CRON[42018]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T12:35:01.867921+03:00 li-BRI-XX CRON[42018]: pam_unix(cron:session): session closed for user root
+2026-01-26T12:45:01.877508+03:00 li-BRI-XX CRON[45151]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T12:45:01.880884+03:00 li-BRI-XX CRON[45151]: pam_unix(cron:session): session closed for user root
+2026-01-26T12:55:01.891218+03:00 li-BRI-XX CRON[48324]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T12:55:01.895086+03:00 li-BRI-XX CRON[48324]: pam_unix(cron:session): session closed for user root
+2026-01-26T13:05:01.907056+03:00 li-BRI-XX CRON[51464]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T13:05:01.911108+03:00 li-BRI-XX CRON[51464]: pam_unix(cron:session): session closed for user root
+2026-01-26T13:15:01.924374+03:00 li-BRI-XX CRON[54634]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T13:15:01.928243+03:00 li-BRI-XX CRON[54634]: pam_unix(cron:session): session closed for user root
+2026-01-26T13:17:01.934933+03:00 li-BRI-XX CRON[55311]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T13:17:01.938278+03:00 li-BRI-XX CRON[55311]: pam_unix(cron:session): session closed for user root
+2026-01-26T13:21:10.269637+03:00 li-BRI-XX systemd-logind[1041]: Lid opened.
+2026-01-26T13:22:31.017015+03:00 li-BRI-XX gdm-password]: gkr-pam: unlocked login keyring
+2026-01-26T13:25:01.949213+03:00 li-BRI-XX CRON[57959]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T13:25:01.952948+03:00 li-BRI-XX CRON[57959]: pam_unix(cron:session): session closed for user root
+2026-01-26T13:30:01.962907+03:00 li-BRI-XX CRON[59559]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T13:30:01.965555+03:00 li-BRI-XX CRON[59559]: pam_unix(cron:session): session closed for user root
+2026-01-26T13:33:37.643683+03:00 li-BRI-XX systemd-logind[1041]: Lid closed.
+2026-01-26T13:33:44.857499+03:00 li-BRI-XX systemd-logind[1041]: Lid opened.
+2026-01-26T13:33:50.654249+03:00 li-BRI-XX gdm-password]: gkr-pam: unlocked login keyring
+2026-01-26T13:35:01.974239+03:00 li-BRI-XX CRON[61305]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T13:35:01.978086+03:00 li-BRI-XX CRON[61305]: pam_unix(cron:session): session closed for user root
+2026-01-26T13:45:01.989825+03:00 li-BRI-XX CRON[64856]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T13:45:01.993836+03:00 li-BRI-XX CRON[64856]: pam_unix(cron:session): session closed for user root
+2026-01-26T13:55:01.005053+03:00 li-BRI-XX CRON[68082]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T13:55:01.008673+03:00 li-BRI-XX CRON[68082]: pam_unix(cron:session): session closed for user root
+2026-01-26T14:05:01.017464+03:00 li-BRI-XX CRON[71379]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T14:05:01.020132+03:00 li-BRI-XX CRON[71379]: pam_unix(cron:session): session closed for user root
+2026-01-26T14:15:01.031457+03:00 li-BRI-XX CRON[74692]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T14:15:01.034217+03:00 li-BRI-XX CRON[74692]: pam_unix(cron:session): session closed for user root
+2026-01-26T14:17:01.038322+03:00 li-BRI-XX CRON[75376]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T14:17:01.040131+03:00 li-BRI-XX CRON[75376]: pam_unix(cron:session): session closed for user root
+2026-01-26T14:25:01.047969+03:00 li-BRI-XX CRON[77995]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T14:25:01.104559+03:00 li-BRI-XX CRON[77995]: pam_unix(cron:session): session closed for user root
+2026-01-26T14:26:30.896211+03:00 li-BRI-XX sudo:       li : TTY=pts/2 ; PWD=/home/li/code/downlog ; USER=root ; COMMAND=/snap/bin/go run server.go
+2026-01-26T14:26:30.897119+03:00 li-BRI-XX sudo: pam_unix(sudo:session): session opened for user root(uid=0) by li(uid=1000)
+2026-01-26T14:30:01.060028+03:00 li-BRI-XX CRON[82218]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T14:30:01.087996+03:00 li-BRI-XX CRON[82218]: pam_unix(cron:session): session closed for user root
+2026-01-26T14:35:01.071505+03:00 li-BRI-XX CRON[83873]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T14:35:01.129808+03:00 li-BRI-XX CRON[83873]: pam_unix(cron:session): session closed for user root
+2026-01-26T14:45:01.086110+03:00 li-BRI-XX CRON[88967]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T14:45:01.089990+03:00 li-BRI-XX CRON[88967]: pam_unix(cron:session): session closed for user root
+2026-01-26T14:55:01.098797+03:00 li-BRI-XX CRON[92646]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T14:55:01.101732+03:00 li-BRI-XX CRON[92646]: pam_unix(cron:session): session closed for user root
+2026-01-26T15:05:01.112038+03:00 li-BRI-XX CRON[96157]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T15:05:01.115251+03:00 li-BRI-XX CRON[96157]: pam_unix(cron:session): session closed for user root
+2026-01-26T15:15:01.125311+03:00 li-BRI-XX CRON[99316]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T15:15:01.129061+03:00 li-BRI-XX CRON[99316]: pam_unix(cron:session): session closed for user root
+2026-01-26T15:17:01.134081+03:00 li-BRI-XX CRON[100004]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T15:17:01.136623+03:00 li-BRI-XX CRON[100004]: pam_unix(cron:session): session closed for user root
+2026-01-26T15:18:00.400166+03:00 li-BRI-XX sudo: pam_unix(sudo:session): session closed for user root
+2026-01-26T15:18:08.632824+03:00 li-BRI-XX sudo:       li : TTY=pts/2 ; PWD=/home/li/code/downlog ; USER=root ; COMMAND=/snap/bin/go run server.go
+2026-01-26T15:18:08.633509+03:00 li-BRI-XX sudo: pam_unix(sudo:session): session opened for user root(uid=0) by li(uid=1000)
+2026-01-26T15:20:40.020103+03:00 li-BRI-XX sudo: pam_unix(sudo:session): session closed for user root
+2026-01-26T15:22:03.529751+03:00 li-BRI-XX sudo:       li : TTY=pts/2 ; PWD=/home/li/code/downlog ; USER=root ; COMMAND=/snap/bin/go run server.go
+2026-01-26T15:22:03.530891+03:00 li-BRI-XX sudo: pam_unix(sudo:session): session opened for user root(uid=0) by li(uid=1000)
+2026-01-26T15:23:22.466766+03:00 li-BRI-XX sudo: pam_unix(sudo:session): session closed for user root
+2026-01-26T15:23:23.965719+03:00 li-BRI-XX sudo:       li : TTY=pts/2 ; PWD=/home/li/code/downlog ; USER=root ; COMMAND=/snap/bin/go run server.go
+2026-01-26T15:23:23.966814+03:00 li-BRI-XX sudo: pam_unix(sudo:session): session opened for user root(uid=0) by li(uid=1000)
+2026-01-26T15:24:16.631591+03:00 li-BRI-XX sudo: pam_unix(sudo:session): session closed for user root
+2026-01-26T15:24:17.494504+03:00 li-BRI-XX sudo:       li : TTY=pts/2 ; PWD=/home/li/code/downlog ; USER=root ; COMMAND=/snap/bin/go run server.go
+2026-01-26T15:24:17.495041+03:00 li-BRI-XX sudo: pam_unix(sudo:session): session opened for user root(uid=0) by li(uid=1000)
+2026-01-26T15:25:01.145988+03:00 li-BRI-XX CRON[104269]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T15:25:01.149626+03:00 li-BRI-XX CRON[104269]: pam_unix(cron:session): session closed for user root
+2026-01-26T15:30:01.158054+03:00 li-BRI-XX CRON[106286]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T15:30:01.215719+03:00 li-BRI-XX CRON[106286]: pam_unix(cron:session): session closed for user root
+2026-01-26T15:31:06.030024+03:00 li-BRI-XX sudo: pam_unix(sudo:session): session closed for user root
+2026-01-26T15:31:15.812110+03:00 li-BRI-XX sudo:       li : TTY=pts/2 ; PWD=/home/li/code/downlog ; USER=root ; COMMAND=/snap/bin/go run server.go
+2026-01-26T15:31:15.812875+03:00 li-BRI-XX sudo: pam_unix(sudo:session): session opened for user root(uid=0) by li(uid=1000)
+2026-01-26T15:35:01.166941+03:00 li-BRI-XX CRON[108797]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T15:35:01.170625+03:00 li-BRI-XX CRON[108797]: pam_unix(cron:session): session closed for user root
+2026-01-26T15:45:01.180339+03:00 li-BRI-XX CRON[112066]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T15:45:01.183917+03:00 li-BRI-XX CRON[112066]: pam_unix(cron:session): session closed for user root
+2026-01-26T15:45:25.300327+03:00 li-BRI-XX sudo: pam_unix(sudo:session): session closed for user root
+2026-01-26T15:45:43.254511+03:00 li-BRI-XX sudo:       li : TTY=pts/2 ; PWD=/home/li/code/downlog ; USER=root ; COMMAND=/snap/bin/go run server.go
+2026-01-26T15:45:43.254808+03:00 li-BRI-XX sudo: pam_unix(sudo:session): session opened for user root(uid=0) by li(uid=1000)
+2026-01-26T15:55:01.193980+03:00 li-BRI-XX CRON[115487]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T15:55:01.198048+03:00 li-BRI-XX CRON[115487]: pam_unix(cron:session): session closed for user root
+2026-01-26T16:05:01.209557+03:00 li-BRI-XX CRON[118669]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T16:05:01.213647+03:00 li-BRI-XX CRON[118669]: pam_unix(cron:session): session closed for user root
+2026-01-26T16:15:01.225856+03:00 li-BRI-XX CRON[121814]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T16:15:01.229562+03:00 li-BRI-XX CRON[121814]: pam_unix(cron:session): session closed for user root
+2026-01-26T16:17:01.236995+03:00 li-BRI-XX CRON[122477]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-01-26T16:17:01.241756+03:00 li-BRI-XX CRON[122477]: pam_unix(cron:session): session closed for user root
+2026-01-26T16:23:40.259264+03:00 li-BRI-XX sudo: pam_unix(sudo:session): session closed for user root
+2026-01-26T16:23:46.283768+03:00 li-BRI-XX sudo:       li : TTY=pts/2 ; PWD=/home/li/code/downlog ; USER=root ; COMMAND=/snap/bin/go run server.go
+2026-01-26T16:23:46.286767+03:00 li-BRI-XX sudo: pam_unix(sudo:session): session opened for user root(uid=0) by li(uid=1000)
