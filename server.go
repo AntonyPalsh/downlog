@@ -12,7 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
+
 	"time"
 )
 
@@ -38,6 +38,7 @@ type Response struct {
 // Структура запроса
 type Reguest struct {
 	Timestamp string `json:"timestamp"` // пример: "2026-01-23T11:07:00+03:00"
+	ScanID    string `json:"scanid"`    // ID запуска сканера
 }
 
 // Получаем значение по умолчанию, если не заданны переменные окружения
@@ -141,6 +142,10 @@ func validationReguest(w http.ResponseWriter, r *http.Request) (string, error) {
 		return "", fmt.Errorf("❌ invalid_json Unexpected extra JSON content")
 	}
 
+	if in.ScanID != "" {
+		return in.ScanID, nil
+	}
+
 	s, err := parseRFC3339(in.Timestamp)
 	if err != nil {
 		http.Error(w, "invalid_timestamp imestamp must be RFC3339, e.g. 2026-01-23T11:07:00+03:00", http.StatusBadRequest)
@@ -149,6 +154,8 @@ func validationReguest(w http.ResponseWriter, r *http.Request) (string, error) {
 	// преобразуем TimeStamp к виду в котором сохраняет файловая система и отправляем на выввод функции
 	return s.Format("2006-01-02"), nil
 }
+
+// ================= EndPoints ============================================================
 
 func catalinalog(w http.ResponseWriter, r *http.Request) {
 
@@ -183,12 +190,19 @@ func alltomcatlog(w http.ResponseWriter, r *http.Request) {
 
 func scanerslog(w http.ResponseWriter, r *http.Request) {
 
-	ts, err := validationReguest(w, r)
+	// ts, err := validationReguest(w, r)
+	// if err != nil {
+	// 	log.Printf("❌ Ошибка валидации JSON: %s", err)
+	// 	return
+	// }
+	// log.Printf("🪤 Timestamp: %v", ts)
+
+	scanID, err := validationReguest(w, r)
 	if err != nil {
 		log.Printf("❌ Ошибка валидации JSON: %s", err)
 		return
 	}
-	log.Printf("🪤 Timestamp: %v", ts)
+	log.Printf("🪤 Scaner ID: %v", scanID)
 
 	// files, err := findFiles(ts, "/var/log", "auth.log")
 	// if err != nil {
@@ -201,21 +215,24 @@ func scanerslog(w http.ResponseWriter, r *http.Request) {
 	// 	fmt.Println(f)
 	// }
 
-	dirs, err := findDirs("2026-01-26", "/var/log")
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-		return
-	}
+	// dirs, err := findDirs("2026-01-26", "/var/log")
+	// if err != nil {
+	// 	fmt.Printf("Error: %v\n", err)
+	// 	return
+	// }
 
-	fmt.Printf("Найдены %d directories:\n", len(dirs))
-	for _, dir := range dirs {
-		fmt.Println(dir)
-	}
+	// fmt.Printf("Найдены %d directories:\n", len(dirs))
+	// for _, dir := range dirs {
+	// 	fmt.Println(dir)
+	// }
 
-	handleDownload(w, dirs, "dir")
+	handleDownload(w, []string{"/home/li/" + scanID}, "dir")
 
 }
 
+//===================================================================================
+
+// Передаём в handleDownload заголовок, список путей к файлам или папку и тип чего мы передаём "file" или "dir"
 func handleDownload(w http.ResponseWriter, files []string, typef string) {
 
 	// fmt.Println("вызов функции handleDownload")
@@ -228,13 +245,13 @@ func handleDownload(w http.ResponseWriter, files []string, typef string) {
 	for _, f := range files {
 		switch typef {
 		case "file":
-			if err := addFileToZip(zw, f); err != nil {
+			if err := addFileToZip(zw, f, f); err != nil {
 				log.Printf("🧾 addFileToZip failed: path=%q err=%v", f, err)
 				http.Error(w, "failed to add file to zip", http.StatusInternalServerError)
 				return
 			}
 		case "dir":
-			if err := addDirToZip(zw, f, f); err != nil {
+			if err := addDirToZip(zw, f); err != nil {
 				log.Printf("addFileToZip failed: path=%q err=%v", f, err)
 				http.Error(w, "failed to add Dir to zip", http.StatusInternalServerError)
 				return
@@ -244,8 +261,7 @@ func handleDownload(w http.ResponseWriter, files []string, typef string) {
 	defer zw.Close()
 }
 
-func addFileToZip(zw *zip.Writer, filePath string) error {
-
+func addFileToZip(zw *zip.Writer, filePath, baseDir string) error {
 	log.Printf("Zip: открытие файла %s", filePath)
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -262,9 +278,12 @@ func addFileToZip(zw *zip.Writer, filePath string) error {
 	if err != nil {
 		return err
 	}
-	// берём весь путь и отделяем от него конечный файл для сохранения в архив
-	filename := filepath.Base(filePath)
-	h.Name = strings.ReplaceAll(filename, "\\", "/")
+	// Вычисляем относительный путь от baseDir
+	relPath, err := filepath.Rel(baseDir, filePath)
+	if err != nil {
+		return err
+	}
+	h.Name = filepath.ToSlash(relPath) // преобразуем обратные слеши в прямые
 	h.Method = zip.Deflate
 
 	w, err := zw.CreateHeader(h)
@@ -281,20 +300,21 @@ func addFileToZip(zw *zip.Writer, filePath string) error {
 	return nil
 }
 
-func addDirToZip(zw *zip.Writer, dirPath, archivePath string) error {
+func addDirToZip(zw *zip.Writer, dirPath string) error {
+	// Вычисляем baseDir как родительскую директорию dirPath
+	baseDir := filepath.Dir(dirPath)
 	entries, err := os.ReadDir(dirPath)
 	if err != nil {
 		return err
 	}
 	for _, e := range entries {
 		fullFilePath := filepath.Join(dirPath, e.Name())
-		ap := strings.ReplaceAll(filepath.Join(dirPath, e.Name()), "\\", "/")
 		if e.IsDir() {
-			if err := addDirToZip(zw, fullFilePath, ap); err != nil {
+			if err := addDirToZip(zw, fullFilePath); err != nil {
 				return err
 			}
 		} else {
-			if err := addFileToZip(zw, fullFilePath); err != nil {
+			if err := addFileToZip(zw, fullFilePath, baseDir); err != nil {
 				return err
 			}
 		}
