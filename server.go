@@ -17,11 +17,14 @@ import (
 
 // Config структура конфигурации
 type Config struct {
-	Port           string
+	// Port           string
 	LimitMB        int64
 	ApiPrefix      string
 	PathLogScaners string
 	PathLogTomcat  string
+	ListenAddr     string
+	TLSCert        string
+	TLSKey         string
 }
 
 // Response структура ответа
@@ -41,14 +44,18 @@ type Reguest struct {
 // Получаем значение по умолчанию, если не заданны переменные окружения
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
+		log.Printf("🏷️ ENV %s : %v", key, value) // выводим найденное значение
 		return value
 	}
+	log.Printf("🏷️ ENV %s : %v (default)", key, defaultValue) // выводим default, если не найдено
 	return defaultValue
 }
 
 var cfg Config
 
 func init() {
+
+	log.Printf("🏷️ Переменные окружения:")
 
 	// Проверяем корректность ввода значения limitMB
 	limitMB, err := strconv.ParseInt(getEnv("UPT_LIMIT_DOWNLOAD_MB", "500"), 10, 64)
@@ -58,11 +65,14 @@ func init() {
 	}
 
 	cfg = Config{
-		LimitMB:        limitMB,
-		Port:           getEnv("DL_PORT", ":8080"),
+		LimitMB: limitMB,
+		// Port:           getEnv("DL_PORT", ":8080"),
 		ApiPrefix:      getEnv("DL_URL_API_PREFIX", ""),
 		PathLogScaners: getEnv("DL_SCAN_LOG", "/app/edm/scan/logs"),
 		PathLogTomcat:  getEnv("DL_TOMCAT", "/app/edm/tomcat-9/logs"),
+		ListenAddr:     getEnv("DL_LISTEN_ADDR", "localhost:8080"),
+		TLSCert:        getEnv("DL_CERT", "cert.crt"),
+		TLSKey:         getEnv("DL_KEY", "privet.key"),
 	}
 }
 
@@ -74,14 +84,15 @@ func registerRoute(pattern string, handler http.HandlerFunc) {
 
 func main() {
 
+	log.Printf("🔖 EdnPoints:")
 	registerRoute(cfg.ApiPrefix+"/api/catalina", catalinalog)
 	registerRoute(cfg.ApiPrefix+"/api/universe", universelog)
 	registerRoute(cfg.ApiPrefix+"/api/scaners", scanerslog)
 
 	// Запуск HTTP сервера
-	log.Printf("🚀 Сервер запущен на http://localhost:%s", cfg.Port)
+	log.Printf("🚀 Сервер запущен на https://%s", cfg.ListenAddr)
 
-	if err := http.ListenAndServe(cfg.Port, nil); err != nil {
+	if err := http.ListenAndServeTLS(cfg.ListenAddr, cfg.TLSCert, cfg.TLSKey, nil); err != nil {
 		log.Fatalf("❌ Ошибка запуска сервера: %v", err)
 	}
 }
