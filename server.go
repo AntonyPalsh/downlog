@@ -12,19 +12,16 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-
 	"time"
 )
 
 // Config структура конфигурации
 type Config struct {
-	Port            string
-	LimitMB         int64
-	ApiPrefix       string
-	PathLogCatalina string
-	PathLogUnivers  string
-	PathLogScaners  string
-	PathLogTomcat   string
+	Port           string
+	LimitMB        int64
+	ApiPrefix      string
+	PathLogScaners string
+	PathLogTomcat  string
 }
 
 // Response структура ответа
@@ -51,9 +48,6 @@ func getEnv(key, defaultValue string) string {
 
 var cfg Config
 
-// const baseDir = "./files"
-// const port = ":8080"
-
 func init() {
 
 	// Проверяем корректность ввода значения limitMB
@@ -64,18 +58,12 @@ func init() {
 	}
 
 	cfg = Config{
-		LimitMB:         limitMB,
-		Port:            getEnv("DL_PORT", ":8080"),
-		ApiPrefix:       getEnv("DL_URL_API_PREFIX", ""),
-		PathLogCatalina: getEnv("DL_CATALINA_LOG", "/app/edm/tomcat-9/logs/catalina"),
-		PathLogUnivers:  getEnv("DL_UNIVERS_LOG", "closed/universe_backend"),
-		PathLogScaners:  getEnv("DL_SCAN_LOG", "/app/edm/scan/logs"),
-		PathLogTomcat:   getEnv("DL_TOMCAT", "/app/edm/tomcat-9/logs"),
+		LimitMB:        limitMB,
+		Port:           getEnv("DL_PORT", ":8080"),
+		ApiPrefix:      getEnv("DL_URL_API_PREFIX", ""),
+		PathLogScaners: getEnv("DL_SCAN_LOG", "/app/edm/scan/logs"),
+		PathLogTomcat:  getEnv("DL_TOMCAT", "/app/edm/tomcat-9/logs"),
 	}
-
-	// if err := os.MkdirAll(cfg.UploadDir, 0750); err != nil {
-	// 	log.Fatalf("❌ Ошибка создания директории: %v", err)
-	// }
 }
 
 // registerRoute регистрирует обработчик и сразу выводит итоговый путь в лог
@@ -86,14 +74,8 @@ func registerRoute(pattern string, handler http.HandlerFunc) {
 
 func main() {
 
-	// обработать ошибку существование директории
-	// _ = os.MkdirAll(baseDir, 0755)
-
-	// http.HandleFunc("/api/download", handleDownload)
-
 	registerRoute(cfg.ApiPrefix+"/api/catalina", catalinalog)
 	registerRoute(cfg.ApiPrefix+"/api/universe", universelog)
-	registerRoute(cfg.ApiPrefix+"/api/alltomcat", alltomcatlog)
 	registerRoute(cfg.ApiPrefix+"/api/scaners", scanerslog)
 
 	// Запуск HTTP сервера
@@ -102,7 +84,6 @@ func main() {
 	if err := http.ListenAndServe(cfg.Port, nil); err != nil {
 		log.Fatalf("❌ Ошибка запуска сервера: %v", err)
 	}
-
 }
 
 func parseRFC3339(s string) (time.Time, error) {
@@ -159,16 +140,18 @@ func validationReguest(w http.ResponseWriter, r *http.Request) (string, error) {
 
 func catalinalog(w http.ResponseWriter, r *http.Request) {
 
+	log.Printf("⚙️  Вызов endpoin /api/catalina")
+
 	ts, err := validationReguest(w, r)
 	if err != nil {
-		log.Printf("❌ Ошибка валидации JSON: %s", err)
+		log.Printf("🪠 Ошибка валидации JSON: %s", err)
 		return
 	}
 	log.Printf("🪤 Timestamp: %v", ts)
 
-	files, err := findFiles(ts, "/var/log", "auth.log")
+	files, err := findFiles(ts, cfg.PathLogTomcat, "catalina")
 	if err != nil {
-		fmt.Println("❌ Ошибка:", err)
+		fmt.Println("🪠 Ошибка:", err)
 		return
 	}
 
@@ -180,54 +163,46 @@ func catalinalog(w http.ResponseWriter, r *http.Request) {
 	handleDownload(w, files, "file")
 }
 
+// ===================================================================================
 func universelog(w http.ResponseWriter, r *http.Request) {
 
+	log.Printf("⚙️ Вызов endpoin /api/univers")
+
+	ts, err := validationReguest(w, r)
+	if err != nil {
+		log.Printf("🪠 Ошибка валидации JSON: %s", err)
+		return
+	}
+	log.Printf("🪤 Timestamp: %v", ts)
+
+	files, err := findFiles(ts, cfg.PathLogTomcat, "universe-backend")
+	if err != nil {
+		fmt.Println("🪠 Ошибка:", err)
+		return
+	}
+
+	fmt.Println("🧾 Найденные файлы:")
+	for _, f := range files {
+		fmt.Println(f)
+	}
+
+	handleDownload(w, files, "file")
+
 }
 
-func alltomcatlog(w http.ResponseWriter, r *http.Request) {
-
-}
-
+// ===================================================================================
 func scanerslog(w http.ResponseWriter, r *http.Request) {
 
-	// ts, err := validationReguest(w, r)
-	// if err != nil {
-	// 	log.Printf("❌ Ошибка валидации JSON: %s", err)
-	// 	return
-	// }
-	// log.Printf("🪤 Timestamp: %v", ts)
+	log.Printf("⚙️ Вызов endpoin /api/scaners")
 
 	scanID, err := validationReguest(w, r)
 	if err != nil {
-		log.Printf("❌ Ошибка валидации JSON: %s", err)
+		log.Printf("🪠 Ошибка валидации JSON: %s", err)
 		return
 	}
 	log.Printf("🪤 Scaner ID: %v", scanID)
 
-	// files, err := findFiles(ts, "/var/log", "auth.log")
-	// if err != nil {
-	// 	fmt.Println("❌ Ошибка:", err)
-	// 	return
-	// }
-
-	// fmt.Println("🧾 Найденные файлы:")
-	// for _, f := range files {
-	// 	fmt.Println(f)
-	// }
-
-	// dirs, err := findDirs("2026-01-26", "/var/log")
-	// if err != nil {
-	// 	fmt.Printf("Error: %v\n", err)
-	// 	return
-	// }
-
-	// fmt.Printf("Найдены %d directories:\n", len(dirs))
-	// for _, dir := range dirs {
-	// 	fmt.Println(dir)
-	// }
-
 	handleDownload(w, []string{"/home/li/" + scanID}, "dir")
-
 }
 
 //===================================================================================
@@ -252,7 +227,7 @@ func handleDownload(w http.ResponseWriter, files []string, typef string) {
 			}
 		case "dir":
 			if err := addDirToZip(zw, f); err != nil {
-				log.Printf("addFileToZip failed: path=%q err=%v", f, err)
+				log.Printf("📂 addDirToZip failed: path=%q err=%v", f, err)
 				http.Error(w, "failed to add Dir to zip", http.StatusInternalServerError)
 				return
 			}
