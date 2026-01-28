@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Загрузка логов</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>📥 Загрузка логов ЕДМ Test</h1>
+    <p class="subtitle">Выбери дату или ID сканера и скачай архив</p>
+
+    <div class="row">
+      <button id="btn-catalina">Catalina.out logs</button>
+      <input type="date" id="date-catalina">
+      <span class="status" id="status-catalina"></span>
+    </div>
+
+    <div class="row">
+      <button id="btn-universe">Universe-backend logs</button>
+      <input type="date" id="date-universe">
+      <span class="status" id="status-universe"></span>
+    </div>
+
+    <div class="row">
+      <button id="btn-scaners">Scaners logs</button>
+      <input type="text" id="scanid" placeholder="Введи ScanID">
+      <span class="status" id="status-scaners"></span>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
