@@ -1,0 +1,39 @@
+[Unit]
+Description=Download Logs Backend Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=downlog
+Group=downlog
+WorkingDirectory=/app/downlog
+
+# Загрузка переменных окружения из .env
+EnvironmentFile=/app/downlog/.env
+
+# Запуск бинарника
+ExecStart=/app/downlog/downlog
+
+# Перезагрузка при падении
+Restart=always
+RestartSec=5
+
+# Логирование
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=downlog
+
+# Лимиты
+LimitNOFILE=65536
+LimitNPROC=512
+
+# Безопасность
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/app/downlog /certs
+
+[Install]
+WantedBy=multi-user.target
