@@ -2,3 +2,4 @@ files/
 *.zip
 *.crt
 *.key
+*.log

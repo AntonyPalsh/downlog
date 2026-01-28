@@ -6,7 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/fs"
+
+	// "io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -71,8 +72,14 @@ func init() {
 		PathLogScaners: getEnv("DL_SCAN_LOG", "/app/edm/scan/logs"),
 		PathLogTomcat:  getEnv("DL_TOMCAT", "/app/edm/tomcat-9/logs"),
 		ListenAddr:     getEnv("DL_LISTEN_ADDR", "localhost:8080"),
-		TLSCert:        getEnv("DL_CERT", "cert.crt"),
-		TLSKey:         getEnv("DL_KEY", "privet.key"),
+		TLSCert:        getEnv("DL_CERT", "/certs/cert.crt"),
+		TLSKey:         getEnv("DL_KEY", "/certs/privet.key"),
+		// ApiPrefix:      getEnv("DL_URL_API_PREFIX", ""),
+		// PathLogScaners: getEnv("DL_SCAN_LOG", "/home/li/code/downlog"),
+		// PathLogTomcat:  getEnv("DL_TOMCAT", "/home/li/code/downlog"),
+		// ListenAddr:     getEnv("DL_LISTEN_ADDR", "localhost:8080"),
+		// TLSCert:        getEnv("DL_CERT", "cert.crt"),
+		// TLSKey:         getEnv("DL_KEY", "privet.key"),
 	}
 }
 
@@ -95,6 +102,9 @@ func main() {
 	if err := http.ListenAndServeTLS(cfg.ListenAddr, cfg.TLSCert, cfg.TLSKey, nil); err != nil {
 		log.Fatalf("❌ Ошибка запуска сервера: %v", err)
 	}
+	// if err := http.ListenAndServe(cfg.ListenAddr, nil); err != nil {
+	// 	log.Fatalf("❌ Ошибка запуска сервера: %v", err)
+	// }
 }
 
 func parseRFC3339(s string) (time.Time, error) {
@@ -213,41 +223,48 @@ func scanerslog(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("🪤 Scaner ID: %v", scanID)
 
-	handleDownload(w, []string{"/home/li/" + scanID}, "dir")
+	handleDownload(w, []string{cfg.PathLogScaners + scanID}, "dir")
+	// handleDownload(w, []string{"/home/li/" + scanID}, "dir")
 }
 
 //===================================================================================
 
 // Передаём в handleDownload заголовок, список путей к файлам или папку и тип чего мы передаём "file" или "dir"
+// ═══════════════════════════════════════════════════════════════════════════════
+// Исправленная handleDownload - закрывает архив ДО возврата
+// ═══════════════════════════════════════════════════════════════════════════════
 func handleDownload(w http.ResponseWriter, files []string, typef string) {
-
-	// fmt.Println("вызов функции handleDownload")
-
 	w.Header().Set("Content-Type", "application/zip")
-	w.Header().Set("Content-Disposition", "attachment")
+	w.Header().Set("Content-Disposition", "attachment; filename=\"files.zip\"")
 
 	zw := zip.NewWriter(w)
 
 	for _, f := range files {
 		switch typef {
 		case "file":
-			if err := addFileToZip(zw, f, f); err != nil {
+			if err := addFileToZip(zw, f); err != nil {
 				log.Printf("🧾 addFileToZip failed: path=%q err=%v", f, err)
 				http.Error(w, "failed to add file to zip", http.StatusInternalServerError)
+				zw.Close() // ← ВАЖНО: закрыть перед возвратом!
 				return
 			}
 		case "dir":
 			if err := addDirToZip(zw, f); err != nil {
 				log.Printf("📂 addDirToZip failed: path=%q err=%v", f, err)
 				http.Error(w, "failed to add Dir to zip", http.StatusInternalServerError)
+				zw.Close() // ← ВАЖНО: закрыть перед возвратом!
 				return
 			}
 		}
 	}
-	defer zw.Close()
+
+	zw.Close() // ← Закрываем архив ДО конца функции
 }
 
-func addFileToZip(zw *zip.Writer, filePath, baseDir string) error {
+// ═══════════════════════════════════════════════════════════════════════════════
+// Исправленная addFileToZip - принимает только filePath
+// ═══════════════════════════════════════════════════════════════════════════════
+func addFileToZip(zw *zip.Writer, filePath string) error {
 	log.Printf("Zip: открытие файла %s", filePath)
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -264,12 +281,9 @@ func addFileToZip(zw *zip.Writer, filePath, baseDir string) error {
 	if err != nil {
 		return err
 	}
-	// Вычисляем относительный путь от baseDir
-	relPath, err := filepath.Rel(baseDir, filePath)
-	if err != nil {
-		return err
-	}
-	h.Name = filepath.ToSlash(relPath) // преобразуем обратные слеши в прямые
+
+	// ← Используем ТОЛЬКО имя файла в архиве
+	h.Name = filepath.Base(filePath)
 	h.Method = zip.Deflate
 
 	w, err := zw.CreateHeader(h)
@@ -286,25 +300,79 @@ func addFileToZip(zw *zip.Writer, filePath, baseDir string) error {
 	return nil
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// Исправленная addDirToZip - рекурсивно обходит директорию
+// ═══════════════════════════════════════════════════════════════════════════════
 func addDirToZip(zw *zip.Writer, dirPath string) error {
-	// Вычисляем baseDir как родительскую директорию dirPath
+	// baseDir - это родительская директория, чтобы сохранить структуру в архиве
 	baseDir := filepath.Dir(dirPath)
+
 	entries, err := os.ReadDir(dirPath)
 	if err != nil {
 		return err
 	}
+
 	for _, e := range entries {
 		fullFilePath := filepath.Join(dirPath, e.Name())
+
 		if e.IsDir() {
+			// Рекурсивно обходим вложенные директории
 			if err := addDirToZip(zw, fullFilePath); err != nil {
 				return err
 			}
 		} else {
-			if err := addFileToZip(zw, fullFilePath, baseDir); err != nil {
+			// Добавляем файл с сохранением относительного пути
+			if err := addFileToZipWithBase(zw, fullFilePath, baseDir); err != nil {
 				return err
 			}
 		}
 	}
+
+	return nil
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Новая функция для добавления файла с сохранением структуры директорий
+// ═══════════════════════════════════════════════════════════════════════════════
+func addFileToZipWithBase(zw *zip.Writer, filePath string, baseDir string) error {
+	log.Printf("Zip: открытие файла %s", filePath)
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	fi, err := file.Stat()
+	if err != nil {
+		return err
+	}
+
+	h, err := zip.FileInfoHeader(fi)
+	if err != nil {
+		return err
+	}
+
+	// Вычисляем относительный путь от baseDir
+	relPath, err := filepath.Rel(baseDir, filePath)
+	if err != nil {
+		return err
+	}
+
+	// Преобразуем в forward slashes для архива
+	h.Name = filepath.ToSlash(relPath)
+	h.Method = zip.Deflate
+
+	w, err := zw.CreateHeader(h)
+	if err != nil {
+		return err
+	}
+
+	n, err := io.Copy(w, file)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Zip: файл добавлен %s (%d байт записано)", h.Name, n)
 	return nil
 }
 
@@ -361,7 +429,10 @@ func findFiles(dateLog string, pathLogs string, nameFile string) ([]string, erro
 
 // contains проверяет, содержит ли строка haystack подстроку needle
 func contains(haystack, needle string) bool {
-	return len(needle) > 0 && (needle == "" || stringContains(haystack, needle))
+	if needle == "" {
+		return true // пустой фильтр = все файлы
+	}
+	return stringContains(haystack, needle)
 }
 
 func stringContains(s, substr string) bool {
@@ -376,49 +447,49 @@ func stringContains(s, substr string) bool {
 // findDirs ищет директории, дата модификации которых совпадает с dateLog
 // dateLog ожидается в формате "2006-01-02" (ISO 8601 / YYYY-MM-DD)
 // Возвращает срез путей директорий и ошибку, если она произошла
-func findDirs(dateLog string, pathLogs string) ([]string, error) {
+// func findDirs(dateLog string, pathLogs string) ([]string, error) {
 
-	// Парсим целевую дату в формате YYYY-MM-DD
-	targetDate, err := time.Parse("2006-01-02", dateLog)
-	if err != nil {
-		return nil, fmt.Errorf("invalid date format: %w", err)
-	}
+// 	// Парсим целевую дату в формате YYYY-MM-DD
+// 	targetDate, err := time.Parse("2006-01-02", dateLog)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("invalid date format: %w", err)
+// 	}
 
-	var result []string
+// 	var result []string
 
-	// WalkDir - эффективный способ обхода директорий (Go 1.16+)
-	err = filepath.WalkDir(pathLogs, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			// Логируем ошибку доступа, но продолжаем обход
-			return nil
-		}
+// 	// WalkDir - эффективный способ обхода директорий (Go 1.16+)
+// 	err = filepath.WalkDir(pathLogs, func(path string, d fs.DirEntry, err error) error {
+// 		if err != nil {
+// 			// Логируем ошибку доступа, но продолжаем обход
+// 			return nil
+// 		}
 
-		// Проверяем только директории (исключаем файлы)
-		if !d.IsDir() {
-			return nil
-		}
+// 		// Проверяем только директории (исключаем файлы)
+// 		if !d.IsDir() {
+// 			return nil
+// 		}
 
-		// Получаем информацию о файле для доступа к времени модификации
-		info, err := d.Info()
-		if err != nil {
-			return nil
-		}
+// 		// Получаем информацию о файле для доступа к времени модификации
+// 		info, err := d.Info()
+// 		if err != nil {
+// 			return nil
+// 		}
 
-		// Сравниваем дату модификации с целевой датой
-		// Преобразуем обе даты в полночь для сравнения только по дате
-		modTime := info.ModTime()
-		modDate := time.Date(modTime.Year(), modTime.Month(), modTime.Day(), 0, 0, 0, 0, time.UTC)
+// 		// Сравниваем дату модификации с целевой датой
+// 		// Преобразуем обе даты в полночь для сравнения только по дате
+// 		modTime := info.ModTime()
+// 		modDate := time.Date(modTime.Year(), modTime.Month(), modTime.Day(), 0, 0, 0, 0, time.UTC)
 
-		if modDate.Equal(targetDate) {
-			result = append(result, path)
-		}
+// 		if modDate.Equal(targetDate) {
+// 			result = append(result, path)
+// 		}
 
-		return nil
-	})
+// 		return nil
+// 	})
 
-	if err != nil {
-		return nil, fmt.Errorf("error walking directory: %w", err)
-	}
+// 	if err != nil {
+// 		return nil, fmt.Errorf("error walking directory: %w", err)
+// 	}
 
-	return result, nil
-}
+// 	return result, nil
+// }
