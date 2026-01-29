@@ -166,6 +166,7 @@ func catalinalog(w http.ResponseWriter, r *http.Request) {
 	ts, err := validationReguest(w, r)
 	if err != nil {
 		log.Printf("🪠 Ошибка валидации JSON: %s", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	log.Printf("🪤 Timestamp: %v", ts)
@@ -173,6 +174,7 @@ func catalinalog(w http.ResponseWriter, r *http.Request) {
 	files, err := findFiles(ts, cfg.PathLogTomcat, "catalina")
 	if err != nil {
 		fmt.Println("🪠 Ошибка:", err)
+		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
 
@@ -192,13 +194,15 @@ func universelog(w http.ResponseWriter, r *http.Request) {
 	ts, err := validationReguest(w, r)
 	if err != nil {
 		log.Printf("🪠 Ошибка валидации JSON: %s", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	log.Printf("🪤 Timestamp: %v", ts)
 
-	files, err := findFiles(ts, cfg.PathLogTomcat, "universe-backend")
+	files, err := findFiles(ts, cfg.PathLogTomcat, "universe_backend")
 	if err != nil {
 		fmt.Println("🪠 Ошибка:", err)
+		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
 
@@ -219,6 +223,7 @@ func scanerslog(w http.ResponseWriter, r *http.Request) {
 	scanID, err := validationReguest(w, r)
 	if err != nil {
 		log.Printf("🪠 Ошибка валидации JSON: %s", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	log.Printf("🪤 Scaner ID: %v", scanID)
@@ -421,7 +426,7 @@ func findFiles(dateLog string, pathLogs string, nameFile string) ([]string, erro
 	}
 
 	if len(foundFiles) == 0 {
-		return nil, fmt.Errorf("файлы не найдены")
+		return nil, fmt.Errorf("файлы не найдены %w", err)
 	}
 
 	return foundFiles, nil

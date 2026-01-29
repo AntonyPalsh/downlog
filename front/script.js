@@ -1,19 +1,45 @@
-const API_BASE = 'https://localhost:8080'; // при необходимости поменять
+const API_BASE = 'https://localhost:8080';
+
+function setStatus(statusEl, type, message) {
+  statusEl.classList.remove('status--loading', 'status--success', 'status--error');
+  statusEl.innerHTML = '';
+
+  if (type) {
+    statusEl.classList.add(`status--${type}`);
+  }
+
+  if (type === 'loading') {
+    const spinner = document.createElement('span');
+    spinner.className = 'spinner';
+    statusEl.appendChild(spinner);
+  }
+
+  if (message) {
+    const text = document.createElement('span');
+    text.textContent = message;
+    statusEl.appendChild(text);
+  }
+}
 
 async function postAndDownload(url, body, btn, statusEl) {
+  const controller = new AbortController();
+  const timeoutMs = 600000; // 10 минут, можно уменьшить
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
   try {
     btn.disabled = true;
-    statusEl.textContent = 'Загрузка...';
+    setStatus(statusEl, 'loading', 'Формирование архива...');
 
     const resp = await fetch(API_BASE + url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
 
     if (!resp.ok) {
-      const text = await resp.text();
-      throw new Error(`HTTP ${resp.status}: ${text}`);
+      const text = await resp.text().catch(() => '');
+      throw new Error(`HTTP ${resp.status}${text ? `: ${text}` : ''}`);
     }
 
     const blob = await resp.blob(); // ожидаем zip
@@ -30,23 +56,29 @@ async function postAndDownload(url, body, btn, statusEl) {
     a.remove();
     URL.revokeObjectURL(urlBlob);
 
-    statusEl.textContent = 'Готово';
+    setStatus(statusEl, 'success', 'Архив скачан');
   } catch (e) {
-    console.error(e);
-    statusEl.textContent = 'Ошибка: ' + e.message;
+    if (e.name === 'AbortError') {
+      setStatus(statusEl, 'error', 'Таймаут ожидания ответа');
+    } else {
+      console.error(e);
+      setStatus(statusEl, 'error', `Ошибка: ${e.message}`);
+    }
   } finally {
+    clearTimeout(timeoutId);
     btn.disabled = false;
   }
 }
 
 function toRFC3339DateOnly(d) {
-  // сервер ждёт RFC3339, но потом форматирует в "2006-01-02"[file:1]
-  // отдаём полночь с локальным часовым поясом
+  // сервер парсит RFC3339 и потом форматирует дату в "2006-01-02"[file:1]
   const dt = new Date(d + 'T00:00:00');
-  return dt.toISOString(); // будет с Z, сервер парсит time.RFC3339[file:1]
+  return dt.toISOString();
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  const app = document.querySelector('.app') || document.body;
+
   const btnCatalina = document.getElementById('btn-catalina');
   const dateCatalina = document.getElementById('date-catalina');
   const statusCatalina = document.getElementById('status-catalina');
@@ -61,7 +93,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   btnCatalina.addEventListener('click', () => {
     if (!dateCatalina.value) {
-      statusCatalina.textContent = 'Выбери дату';
+      setStatus(statusCatalina, 'error', 'Выбери дату');
       return;
     }
     postAndDownload(
@@ -74,7 +106,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   btnUniverse.addEventListener('click', () => {
     if (!dateUniverse.value) {
-      statusUniverse.textContent = 'Выбери дату';
+      setStatus(statusUniverse, 'error', 'Выбери дату');
       return;
     }
     postAndDownload(
@@ -88,7 +120,7 @@ window.addEventListener('DOMContentLoaded', () => {
   btnScaners.addEventListener('click', () => {
     const scanid = scanidInput.value.trim();
     if (!scanid) {
-      statusScaners.textContent = 'Укажи ScanID';
+      setStatus(statusScaners, 'error', 'Укажи ScanID');
       return;
     }
     postAndDownload(
