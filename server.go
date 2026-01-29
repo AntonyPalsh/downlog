@@ -68,18 +68,18 @@ func init() {
 	cfg = Config{
 		LimitMB: limitMB,
 		// Port:           getEnv("DL_PORT", ":8080"),
-		// ApiPrefix:      getEnv("DL_URL_API_PREFIX", ""),
-		// PathLogScaners: getEnv("DL_SCAN_LOG", "/app/edm/scan/logs"),
-		// PathLogTomcat:  getEnv("DL_TOMCAT", "/app/edm/tomcat-9/logs"),
-		// ListenAddr:     getEnv("DL_LISTEN_ADDR", "localhost:8080"),
-		// TLSCert:        getEnv("DL_CERT", "/certs/cert.crt"),
-		// TLSKey:         getEnv("DL_KEY", "/certs/privet.key"),
-		// ApiPrefix:      getEnv("DL_URL_API_PREFIX", ""),
-		PathLogScaners: getEnv("DL_SCAN_LOG", "/home/li/code/downlog"),
-		PathLogTomcat:  getEnv("DL_TOMCAT", "/home/li/code/downlog"),
+		ApiPrefix:      getEnv("DL_URL_API_PREFIX", ""),
+		PathLogScaners: getEnv("DL_SCAN_LOG", "/app/edm/scan/logs"),
+		PathLogTomcat:  getEnv("DL_TOMCAT", "/app/edm/tomcat-9/logs"),
 		ListenAddr:     getEnv("DL_LISTEN_ADDR", "localhost:8080"),
-		TLSCert:        getEnv("DL_CERT", "cert.crt"),
-		TLSKey:         getEnv("DL_KEY", "privet.key"),
+		TLSCert:        getEnv("DL_CERT", "/certs/cert.crt"),
+		TLSKey:         getEnv("DL_KEY", "/certs/privet.key"),
+		// ApiPrefix:      getEnv("DL_URL_API_PREFIX", ""),
+		// PathLogScaners: getEnv("DL_SCAN_LOG", "/home/li/code/downlog"),
+		// PathLogTomcat:  getEnv("DL_TOMCAT", "/home/li/code/downlog"),
+		// ListenAddr:     getEnv("DL_LISTEN_ADDR", "localhost:8080"),
+		// TLSCert:        getEnv("DL_CERT", "cert.crt"),
+		// TLSKey:         getEnv("DL_KEY", "privet.key"),
 	}
 }
 
@@ -99,12 +99,12 @@ func main() {
 	// Запуск HTTP сервера
 	log.Printf("🚀 Сервер запущен на https://%s", cfg.ListenAddr)
 
-	// if err := http.ListenAndServeTLS(cfg.ListenAddr, cfg.TLSCert, cfg.TLSKey, nil); err != nil {
-	// 	log.Fatalf("❌ Ошибка запуска сервера: %v", err)
-	// }
-	if err := http.ListenAndServe(cfg.ListenAddr, nil); err != nil {
+	if err := http.ListenAndServeTLS(cfg.ListenAddr, cfg.TLSCert, cfg.TLSKey, nil); err != nil {
 		log.Fatalf("❌ Ошибка запуска сервера: %v", err)
 	}
+	// if err := http.ListenAndServe(cfg.ListenAddr, nil); err != nil {
+	// 	log.Fatalf("❌ Ошибка запуска сервера: %v", err)
+	// }
 }
 
 func parseRFC3339(s string) (time.Time, error) {
