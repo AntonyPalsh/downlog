@@ -426,7 +426,7 @@ func findFiles(dateLog string, pathLogs string, nameFile string) ([]string, erro
 	}
 
 	if len(foundFiles) == 0 {
-		return nil, fmt.Errorf("файлы не найдены: %s , по пути: %d", nameFile, pathLogs)
+		return nil, fmt.Errorf("файлы не найдены: %s , по пути: %s", nameFile, pathLogs)
 	}
 
 	return foundFiles, nil
