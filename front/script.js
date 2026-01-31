@@ -71,10 +71,12 @@ async function postAndDownload(url, body, btn, statusEl) {
 }
 
 function toRFC3339DateOnly(d) {
-  // сервер парсит RFC3339 и потом форматирует дату в "2006-01-02"[file:1]
-  const dt = new Date(d + 'T00:00:00');
-  return dt.toISOString();
+  // RFC3339: 2006-01-02 (file1)
+  const [year, month, day] = d.split('-').map(Number);
+  const dt = new Date(Date.UTC(year, month - 1, day));  // UTC дата без времени
+  return dt.toISOString().split('T')[0];
 }
+
 
 window.addEventListener('DOMContentLoaded', () => {
   const app = document.querySelector('.app') || document.body;
@@ -93,7 +95,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   btnCatalina.addEventListener('click', () => {
     if (!dateCatalina.value) {
-      setStatus(statusCatalina, 'error', 'Выбери дату');
+      setStatus(statusCatalina, 'error', 'Выберите дату');
       return;
     }
     postAndDownload(
@@ -106,7 +108,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   btnUniverse.addEventListener('click', () => {
     if (!dateUniverse.value) {
-      setStatus(statusUniverse, 'error', 'Выбери дату');
+      setStatus(statusUniverse, 'error', 'Выберите дату');
       return;
     }
     postAndDownload(
@@ -120,7 +122,7 @@ window.addEventListener('DOMContentLoaded', () => {
   btnScaners.addEventListener('click', () => {
     const scanid = scanidInput.value.trim();
     if (!scanid) {
-      setStatus(statusScaners, 'error', 'Укажи ScanID');
+      setStatus(statusScaners, 'error', 'Укажите ScanID');
       return;
     }
     postAndDownload(
