@@ -70,11 +70,13 @@ async function postAndDownload(url, body, btn, statusEl) {
   }
 }
 
+
 function toRFC3339DateOnly(d) {
-  // RFC3339: 2006-01-02 (file1)
+  // Парсим YYYY-MM-DD и создаём дату в UTC без смещения
   const [year, month, day] = d.split('-').map(Number);
-  const dt = new Date(Date.UTC(year, month - 1, day));  // UTC дата без времени
-  return dt.toISOString().split('T')[0];
+  const date = Date.UTC(year, month - 1, day); // month -1 т.к. JS месяцы 0-based
+  const dt = new Date(date);
+  return dt.toISOString();
 }
 
 
