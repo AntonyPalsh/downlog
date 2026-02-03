@@ -98,55 +98,108 @@ async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
   }
 }
 
-async function postAndDownload(url, body, btn, statusEl) {
+async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
   const controller = new AbortController();
   const timeoutMs = 600000;
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     btn.disabled = true;
-    setStatus(statusEl, 'loading', 'Формирование архива...');
+    setStatus(statusEl, 'loading', 'Формирование архивов...');
 
-    const resp = await fetch(SCANERS_API_BASE + url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: controller.signal,
+    const promises = nodes.map(async (node) => {
+      const base = NODES[node];
+      if (!base) {
+        throw new Error(`Неизвестный node: ${node}`);
+      }
+
+      const resp = await fetch(base + endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => '');
+        throw new Error(`${node}: HTTP ${resp.status} ${resp.statusText}${text ? `: ${text.slice(0, 100)}` : ''}`);
+      }
+
+      const blob = await resp.blob();
+      const contentType = resp.headers.get('Content-Type') || '';
+      
+      // Проверяем, что это действительно ZIP
+      if (!contentType.includes('zip') && !contentType.includes('application/octet-stream')) {
+        throw new Error(`${node}: неожиданный тип файла (${contentType})`);
+      }
+
+      const disposition = resp.headers.get('Content-Disposition') || '';
+      const m = disposition.match(/filename=\"?([^\"]+)\"?/i);
+      const baseName = m ? m[1].replace(/\.(zip|gz|tar)/i, '') : 'files';
+      const filename = `${node}-${baseName}.zip`;
+
+      const urlBlob = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = urlBlob;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(urlBlob);
+
+      return { node, filename };
     });
 
-    if (!resp.ok) {
-      const text = await resp.text().catch(() => '');
-      throw new Error(`HTTP ${resp.status}${text ? `: ${text}` : ''}`);
+    const results = await Promise.allSettled(promises);
+    const errors = results.filter(r => r.status === 'rejected');
+
+    if (errors.length > 0) {
+      const errorMsgs = errors.map(r => r.reason.message).join('; ');
+      throw new Error(errorMsgs);
     }
 
-    const blob = await resp.blob();
-    const disposition = resp.headers.get('Content-Disposition') || '';
-    const m = disposition.match(/filename=\"?([^\"]+)\"?/i);
-    const filename = m ? m[1] : 'files.zip';
+    setStatus(
+      statusEl,
+      'success',
+      `✅ Архивы скачаны:\n${results.map(r => `• ${r.value.filename}`).join('\n')}`
+    );
 
-    const urlBlob = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = urlBlob;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(urlBlob);
-
-    setStatus(statusEl, 'success', 'Архив скачан');
   } catch (e) {
+    let errorMessage = 'Неизвестная ошибка';
+    
     if (e.name === 'AbortError') {
-      setStatus(statusEl, 'error', 'Таймаут ожидания ответа');
+      errorMessage = '⏰ Таймаут ожидания ответа (10 минут)';
+    } else if (e.message.includes('Failed to fetch')) {
+      errorMessage = '🌐 Сетевая ошибка (Failed to fetch):\n• Нет соединения с node1/node2\n• Неправильный адрес/порт\n• CORS заблокирован\n• Firewall блокирует';
+    } else if (e.message.includes('HTTP')) {
+      const match = e.message.match(/(\w+):?\s*HTTP\s+(\d+)/i);
+      if (match) {
+        const nodeName = match[1] || 'Node';
+        const statusCode = match[2];
+        errorMessage = `❌ ${nodeName}: HTTP ${statusCode}\n• 400/422 - неверные параметры запроса\n• 500/502 - ошибка бэкенда\n• 503 - node перегружен`;
+      }
+    } else if (e.message.includes('неожиданный тип файла')) {
+      errorMessage = '📄 Бэкенд вернул не ZIP-архив\n• Проверьте endpoint\n• Убедитесь, что сервер возвращает ZIP';
+    } else if (e.message.includes('Неизвестный node')) {
+      errorMessage = `⚠️ Конфигурация: ${e.message}\nПроверьте объект NODES`;
     } else {
-      console.error(e);
-      setStatus(statusEl, 'error', `Ошибка: ${e.message}`);
+      errorMessage = `❌ ${e.message}`;
     }
+    
+    console.error('🚨 Подробности ошибки:', {
+      error: e,
+      nodes,
+      endpoint,
+      body,
+      timestamp: new Date().toISOString()
+    });
+    
+    setStatus(statusEl, 'error', errorMessage);
   } finally {
     clearTimeout(timeoutId);
     btn.disabled = false;
   }
 }
-
 
 function toRFC3339DateOnly(d) {
   // Парсим YYYY-MM-DD и создаём дату в UTC без смещения
