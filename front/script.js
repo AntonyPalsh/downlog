@@ -1,9 +1,10 @@
 
-const NODES_TOMCAT = {
-  node1:                 'https://node1:8080',
-  node2:                 'https://node2:8080',
+const NODES = {
+  node1:                 '/downlog/node01',
+  node2:                 '/downlog/node02',
 };
-const SCANERS_API_BASE = 'https://node3:8080'; 
+const SCANERS_API_BASE = '/downlog/node03'; 
+const CONTUR = 'preprod';
 
 function setStatus(statusEl, type, message) {
   statusEl.classList.remove('status--loading', 'status--success', 'status--error');
@@ -36,7 +37,7 @@ async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
     setStatus(statusEl, 'loading', 'Формирование архивов...');
 
     const promises = nodes.map(async (node) => {
-      const base = NODES_TOMCAT[node];
+      const base = NODES[node];
       if (!base) {
         throw new Error(`Неизвестный node: ${node}`);
       }
@@ -136,7 +137,7 @@ async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
       const disposition = resp.headers.get('Content-Disposition') || '';
       const m = disposition.match(/filename=\"?([^\"]+)\"?/i);
       const baseName = m ? m[1].replace(/\.(zip|gz|tar)/i, '') : 'files';
-      const filename = `${node}-${baseName}.zip`;
+      const filename = `${CONTUR}-${node}-${baseName}.zip`;
 
       const urlBlob = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -170,7 +171,7 @@ async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
     if (e.name === 'AbortError') {
       errorMessage = '⏰ Таймаут ожидания ответа (10 минут)';
     } else if (e.message.includes('Failed to fetch')) {
-      errorMessage = '🌐 Сетевая ошибка (Failed to fetch):\n• Нет соединения с node1/node2\n• Неправильный адрес/порт\n• CORS заблокирован\n• Firewall блокирует';
+      errorMessage = '🌐 Сетевая ошибка (Failed to fetch):\n• Нет соединения с node1/node2\n';
     } else if (e.message.includes('HTTP')) {
       const match = e.message.match(/(\w+):?\s*HTTP\s+(\d+)/i);
       if (match) {
