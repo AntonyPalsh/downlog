@@ -211,61 +211,73 @@ function toRFC3339DateOnly(d) {
 }
 
 async function postAndDownload(endpoint, body, btn, statusEl) {
-  const controller = new AbortController();
-  const timeoutMs = 5000;
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    btn.disabled = true;
-    setStatus(statusEl, 'loading', 'Обработка...');
-    
-    const base = SCANERS_API_BASE;  // Или нужный base URL
-    const resp = await fetch(`${base}${endpoint}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-    
-    if (!resp.ok) {
-      const text = await resp.text().catch(() => '');
-      throw new Error(`HTTP ${resp.status}: ${text}`);
+    const controller = new AbortController();
+    const timeoutMs = 5000;
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+        btn.disabled = true;
+        setStatus(statusEl, "loading", "...");
+
+        const base = SCANERS_API_BASE; // как у тебя
+        const resp = await fetch(base + endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+            signal: controller.signal,
+        });
+
+        if (!resp.ok) {
+            const text = await resp.text().catch(() => "");
+            throw new Error(`HTTP ${resp.status} ${text ? text.slice(0, 100) : ""}`);
+        }
+
+        const contentType = resp.headers.get("Content-Type") || "";
+        if (!contentType.includes("zip") && !contentType.includes("application/octet-stream")) {
+            throw new Error(`unexpected content-type: ${contentType}`);
+        }
+
+        const blob = await resp.blob();
+        if (!blob.size) {
+            throw new Error("empty response");
+        }
+
+        const disposition = resp.headers.get("Content-Disposition") || "";
+        const m = disposition.match(/filename="?([^"]+)"?/i);
+        const baseName = m ? m[1].replace(/\.zip$/i, "") : "files";
+        const filename = `scan-${baseName}.zip`;
+
+        const urlBlob = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = urlBlob;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(urlBlob);
+
+        setStatus(statusEl, "success", filename);
+    } catch (e) {
+        console.error("Backend error", { error: e, endpoint, body });
+
+        let errorMessage;
+        if (e.name === "AbortError") {
+            errorMessage = "timeout 10s";
+        } else if (e.message && e.message.includes("Failed to fetch")) {
+            errorMessage = "Backend down";
+        } else if (e.message && e.message.startsWith("HTTP")) {
+            errorMessage = e.message.slice(0, 100);
+        } else {
+            errorMessage = e.message || "unknown error";
+        }
+
+        setStatus(statusEl, "error", errorMessage);
+    } finally {
+        clearTimeout(timeoutId);
+        btn.disabled = false;
     }
-    
-    const blob = await resp.blob();
-    const disposition = resp.headers.get('Content-Disposition');
-    const m = disposition ? disposition.match(/filename\*=?.*?['"]?([^'";\s]+)['"]?/) : null;
-    const baseName = m ? m[1].replace(/\.zip$/, '') : 'files';
-    const filename = `scan-${baseName}.zip`;  // Адаптируйте под нужное
-    
-    const urlBlob = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = urlBlob;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(urlBlob);
-    
-    setStatus(statusEl, 'success', `Скачано: ${filename}`);
-  } catch (e) {
-  console.error('Backend error:', { error: e, endpoint, body });  // Всегда логируем
-  let errorMessage = 'Неизвестная ошибка';
-  
-  if (e.name === 'AbortError') {
-    errorMessage = 'Таймаут (10 мин)';
-  } else if (e.message.includes('Failed to fetch') || !e.message) {
-    errorMessage = 'Backend недоступен (сервер down или сеть)';
-  } else if (e.message.includes('HTTP')) {
-    // Уже есть логика
-    errorMessage = `HTTP ошибка: ${e.message.slice(0, 100)}`;
-  }
-  
-  setStatus(statusEl, 'error', errorMessage);
-} finally {
-    clearTimeout(timeoutId);
-    btn.disabled = false;
-  }
 }
+
 
 window.addEventListener('DOMContentLoaded', () => {
   const app = document.querySelector('.app') || document.body;
