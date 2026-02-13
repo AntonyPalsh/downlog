@@ -6,8 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-
-	// "io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -18,7 +16,6 @@ import (
 
 // Config структура конфигурации
 type Config struct {
-	// Port           string
 	LimitMB        int64
 	ApiPrefix      string
 	PathLogScaners string
@@ -74,6 +71,7 @@ func init() {
 		ListenAddr:     getEnv("DL_LISTEN_ADDR", "localhost:8080"),
 		TLSCert:        getEnv("DL_CERT", "/certs/cert.crt"),
 		TLSKey:         getEnv("DL_KEY", "/certs/privet.key"),
+
 		// ApiPrefix:      getEnv("DL_URL_API_PREFIX", ""),
 		// PathLogScaners: getEnv("DL_SCAN_LOG", "/home/li/code/downlog"),
 		// PathLogTomcat:  getEnv("DL_TOMCAT", "/home/li/code/downlog"),
@@ -144,9 +142,9 @@ func validationReguest(w http.ResponseWriter, r *http.Request) (string, error) {
 		return "", fmt.Errorf("❌ invalid_json Unexpected extra JSON content")
 	}
 
-	if in.ScanID != "" {
-		return in.ScanID, nil
-	}
+	// if in.ScanID != "" {
+	// 	return in.ScanID, nil
+	// }
 
 	s, err := parseRFC3339(in.Timestamp)
 	if err != nil {
@@ -448,53 +446,3 @@ func stringContains(s, substr string) bool {
 	}
 	return false
 }
-
-// findDirs ищет директории, дата модификации которых совпадает с dateLog
-// dateLog ожидается в формате "2006-01-02" (ISO 8601 / YYYY-MM-DD)
-// Возвращает срез путей директорий и ошибку, если она произошла
-// func findDirs(dateLog string, pathLogs string) ([]string, error) {
-
-// 	// Парсим целевую дату в формате YYYY-MM-DD
-// 	targetDate, err := time.Parse("2006-01-02", dateLog)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("invalid date format: %w", err)
-// 	}
-
-// 	var result []string
-
-// 	// WalkDir - эффективный способ обхода директорий (Go 1.16+)
-// 	err = filepath.WalkDir(pathLogs, func(path string, d fs.DirEntry, err error) error {
-// 		if err != nil {
-// 			// Логируем ошибку доступа, но продолжаем обход
-// 			return nil
-// 		}
-
-// 		// Проверяем только директории (исключаем файлы)
-// 		if !d.IsDir() {
-// 			return nil
-// 		}
-
-// 		// Получаем информацию о файле для доступа к времени модификации
-// 		info, err := d.Info()
-// 		if err != nil {
-// 			return nil
-// 		}
-
-// 		// Сравниваем дату модификации с целевой датой
-// 		// Преобразуем обе даты в полночь для сравнения только по дате
-// 		modTime := info.ModTime()
-// 		modDate := time.Date(modTime.Year(), modTime.Month(), modTime.Day(), 0, 0, 0, 0, time.UTC)
-
-// 		if modDate.Equal(targetDate) {
-// 			result = append(result, path)
-// 		}
-
-// 		return nil
-// 	})
-
-// 	if err != nil {
-// 		return nil, fmt.Errorf("error walking directory: %w", err)
-// 	}
-
-// 	return result, nil
-// }
