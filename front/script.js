@@ -3,8 +3,9 @@ const NODES = {
   node1:                 '/downlog/node01',
   node2:                 '/downlog/node02',
 };
-const SCANERS_API_BASE = '/downlog/node03'; 
+const SCANERS_API_BASE = '/downlog/node03';
 const CONTUR = 'preprod';
+const TIMEOUT_MS = 5000;
 
 function setStatus(statusEl, type, message) {
   statusEl.classList.remove('status--loading', 'status--success', 'status--error');
@@ -29,8 +30,7 @@ function setStatus(statusEl, type, message) {
 
 async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
   const controller = new AbortController();
-  const timeoutMs = 5000;
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
     btn.disabled = true;
@@ -101,8 +101,7 @@ async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
 
 async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
   const controller = new AbortController();
-  const timeoutMs = 5000;
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
     btn.disabled = true;
@@ -171,7 +170,7 @@ async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
     if (e.name === 'AbortError') {
       errorMessage = '⏰ Таймаут ожидания ответа (10 минут)';
     } else if (e.message.includes('Failed to fetch')) {
-      errorMessage = '🌐 Сетевая ошибка (Failed to fetch):\n• Нет соединения с node1/node2\n';
+      errorMessage = '🌐 Сетевая ошибка (Failed to fetch):\n• Нет соединения c node1/node2\n';
     } else if (e.message.includes('HTTP')) {
       const match = e.message.match(/(\w+):?\s*HTTP\s+(\d+)/i);
       if (match) {
@@ -182,7 +181,7 @@ async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
     } else if (e.message.includes('неожиданный тип файла')) {
       errorMessage = '📄 Бэкенд вернул не ZIP-архив\n• Проверьте endpoint\n• Убедитесь, что сервер возвращает ZIP';
     } else if (e.message.includes('Неизвестный node')) {
-      errorMessage = `⚠️ Конфигурация: ${e.message}\nПроверьте объект NODES`;
+      errorMessage = `⚠️ Конфигурация: ${e.message}\n Проверьте объект NODES`;
     } else {
       errorMessage = `❌ ${e.message}`;
     }
@@ -212,8 +211,7 @@ function toRFC3339DateOnly(d) {
 
 async function postAndDownload(endpoint, body, btn, statusEl) {
     const controller = new AbortController();
-    const timeoutMs = 5000;
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     try {
         btn.disabled = true;

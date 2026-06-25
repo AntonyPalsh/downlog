@@ -10,24 +10,40 @@
 <body>
   <div class="container">
     <h1>📥 Загрузка логов ЕДМ Test</h1>
-    <p class="subtitle">Выберите дату или ID сканера и скачай архив</p>
+    <h3>Загрузка логов Tomcat</h3>
+    <p class="subtitle">Выберите дату и скачайте архив</p>
 
     <div class="row">
-      <button id="btn-catalina">Catalina.out logs</button>
+      <button id="btn-catalina">Catalina.out</button>
       <input type="date" id="date-catalina">
       <span class="status" id="status-catalina"></span>
     </div>
 
     <div class="row">
-      <button id="btn-universe">Universe-backend logs</button>
+      <button id="btn-universe">Universe-backend</button>
       <input type="date" id="date-universe">
       <span class="status" id="status-universe"></span>
     </div>
 
+    <h3>Загрузка логов сканеров</h3>
+    <p class="subtitle">Выберите ID сканера или дату для log.txt и скачайте архив</p>
+
     <div class="row">
-      <button id="btn-scaners">Scaners logs</button>
-      <input type="text" id="scanid" placeholder="Введи ScanID">
+      <button id="btn-scaners">Scaners</button>
+      <input type="text" id="scanid" placeholder="Введите ScanID">
       <span class="status" id="status-scaners"></span>
+    </div>
+
+    <div class="row">
+      <button id="btn-scaners-formit">Scaners Formit</button>
+      <input type="text" id="scanid-formit" placeholder="Введите ScanID">
+      <span class="status" id="status-scaners-formit"></span>
+    </div>
+
+    <div class="row">
+      <button id="btn-scaners-logtxt">Scaners Log.txt</button>
+      <input type="date" id="scanid-logtxt" placeholder="Введите ScanID">
+      <span class="status" id="status-scaners-logtxt"></span>
     </div>
   </div>
 
