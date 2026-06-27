@@ -51,7 +51,7 @@ async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
 
       if (!resp.ok) {
         const text = await resp.text().catch(() => '');
-        throw new Error(`${node}: HTTP ${resp.status}${text ? `: ${text}` : ''}`);
+        throw new Error(resp.status === 404 ? 'Backend недоступен' : `${node}: HTTP ${resp.status}${text ? `: ${text}` : ''}`);
       }
 
       const blob = await resp.blob();
@@ -122,7 +122,7 @@ async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
 
       if (!resp.ok) {
         const text = await resp.text().catch(() => '');
-        throw new Error(`${node}: HTTP ${resp.status} ${resp.statusText}${text ? `: ${text.slice(0, 100)}` : ''}`);
+        throw new Error(resp.status === 404 ? 'Backend недоступен' : `${node}: HTTP ${resp.status} ${resp.statusText}${text ? `: ${text.slice(0, 100)}` : ''}`);
       }
 
       const blob = await resp.blob();
@@ -227,7 +227,7 @@ async function postAndDownload(endpoint, body, btn, statusEl) {
 
         if (!resp.ok) {
             const text = await resp.text().catch(() => "");
-            throw new Error(`HTTP ${resp.status} ${text ? text.slice(0, 100) : ""}`);
+            throw new Error(resp.status === 404 ? 'Backend недоступен' : `HTTP ${resp.status} ${text ? text.slice(0, 100) : ""}`);
         }
 
         const contentType = resp.headers.get("Content-Type") || "";
@@ -260,9 +260,9 @@ async function postAndDownload(endpoint, body, btn, statusEl) {
 
         let errorMessage;
         if (e.name === "AbortError") {
-            errorMessage = "timeout 10s";
-        } else if (e.message && e.message.includes("Failed to fetch")) {
-            errorMessage = "Backend down";
+            errorMessage = "Таймаут ожидания ответа";
+        } else if (e.message && (e.message.includes("Failed to fetch") || e.message.includes("Backend недоступен") || e.message.includes("404"))) {
+            errorMessage = "Backend недоступен";
         } else if (e.message && e.message.startsWith("HTTP")) {
             errorMessage = e.message.slice(0, 100);
         } else {
