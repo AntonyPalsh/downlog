@@ -19,13 +19,15 @@ import (
 // Config структура конфигурации
 type Config struct {
 	// Port           string
-	LimitMB        int64
-	ApiPrefix      string
-	PathLogScaners string
-	PathLogTomcat  string
-	ListenAddr     string
-	TLSCert        string
-	TLSKey         string
+	LimitMB              int64
+	ApiPrefix            string
+	PathLogScaners       string
+	PathLogScanersFormit string
+	PathLogScanersLogtxt string
+	PathLogTomcat        string
+	ListenAddr           string
+	TLSCert              string
+	TLSKey               string
 }
 
 // Response структура ответа
@@ -68,12 +70,14 @@ func init() {
 	cfg = Config{
 		LimitMB: limitMB,
 		// Port:           getEnv("DL_PORT", ":8080"),
-		ApiPrefix:      getEnv("DL_URL_API_PREFIX", ""),
-		PathLogScaners: getEnv("DL_SCAN_LOG", "/app/edm/scan/logs"),
-		PathLogTomcat:  getEnv("DL_TOMCAT", "/app/edm/tomcat-9/logs"),
-		ListenAddr:     getEnv("DL_LISTEN_ADDR", "localhost:8080"),
-		TLSCert:        getEnv("DL_CERT", "/certs/cert.crt"),
-		TLSKey:         getEnv("DL_KEY", "/certs/privet.key"),
+		ApiPrefix:            getEnv("DL_URL_API_PREFIX", ""),
+		PathLogScaners:       getEnv("DL_SCAN_LOG", "/app/edm/scan/logs"),
+		PathLogScanersFormit: getEnv("DL_SCAN_LOG_FORMIT", "/app/edm/scan/logs"),
+		PathLogScanersLogtxt: getEnv("DL_SCAN_LOG_LOGTXT", "/app/edm/scan/logs"),
+		PathLogTomcat:        getEnv("DL_TOMCAT", "/app/edm/tomcat-9/logs"),
+		ListenAddr:           getEnv("DL_LISTEN_ADDR", "localhost:8080"),
+		TLSCert:              getEnv("DL_CERT", "/certs/cert.crt"),
+		TLSKey:               getEnv("DL_KEY", "/certs/privet.key"),
 		// ApiPrefix:      getEnv("DL_URL_API_PREFIX", ""),
 		// PathLogScaners: getEnv("DL_SCAN_LOG", "/home/li/code/downlog"),
 		// PathLogTomcat:  getEnv("DL_TOMCAT", "/home/li/code/downlog"),
@@ -95,6 +99,8 @@ func main() {
 	registerRoute(cfg.ApiPrefix+"/api/catalina", catalinalog)
 	registerRoute(cfg.ApiPrefix+"/api/universe", universelog)
 	registerRoute(cfg.ApiPrefix+"/api/scaners", scanerslog)
+	registerRoute(cfg.ApiPrefix+"/api/scaners-formit", scanerslogFormit)
+	registerRoute(cfg.ApiPrefix+"/api/scaners-logtxt", scanerslogLogtxt)
 
 	// Запуск HTTP сервера
 	log.Printf("🚀 Сервер запущен на https://%s", cfg.ListenAddr)
@@ -232,11 +238,52 @@ func scanerslog(w http.ResponseWriter, r *http.Request) {
 	// handleDownload(w, []string{"/home/li/" + scanID}, "dir")
 }
 
-//===================================================================================
+func scanerslogLogtxt(w http.ResponseWriter, r *http.Request) {
 
+	log.Printf("⚙️  Вызов endpoin /api/scaners-logtxt")
+
+	ts, err := validationReguest(w, r)
+	if err != nil {
+		log.Printf("🪠 Ошибка валидации JSON: %s", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	log.Printf("🪤 Timestamp: %v", ts)
+
+	files, err := findFiles(ts, cfg.PathLogScanersLogtxt, "Log.txt")
+	if err != nil {
+		fmt.Println("🪠 Ошибка:", err)
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+
+	fmt.Println("🧾 Найденные файлы:")
+	for _, f := range files {
+		fmt.Println(f)
+	}
+
+	handleDownload(w, files, "file")
+}
+
+// ===================================================================================
+func scanerslogFormit(w http.ResponseWriter, r *http.Request) {
+
+	log.Printf("⚙️ Вызов endpoin /api/scaners-formit")
+
+	scanID, err := validationReguest(w, r)
+	if err != nil {
+		log.Printf("🪠 Ошибка валидации JSON: %s", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	log.Printf("🪤 Scaner ID: %v", scanID)
+
+	handleDownload(w, []string{cfg.PathLogScanersFormit + scanID}, "dir")
+	// handleDownload(w, []string{"/home/li/" + scanID}, "dir")
+}
+
+// ===================================================================================
 // Передаём в handleDownload заголовок, список путей к файлам или папку и тип чего мы передаём "file" или "dir"
-// ═══════════════════════════════════════════════════════════════════════════════
-// Исправленная handleDownload - закрывает архив ДО возврата
 // ═══════════════════════════════════════════════════════════════════════════════
 func handleDownload(w http.ResponseWriter, files []string, typef string) {
 	w.Header().Set("Content-Type", "application/zip")
@@ -263,11 +310,9 @@ func handleDownload(w http.ResponseWriter, files []string, typef string) {
 		}
 	}
 
-	zw.Close() // ← Закрываем архив ДО конца функции
+	zw.Close()
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Исправленная addFileToZip - принимает только filePath
 // ═══════════════════════════════════════════════════════════════════════════════
 func addFileToZip(zw *zip.Writer, filePath string) error {
 	log.Printf("Zip: открытие файла %s", filePath)

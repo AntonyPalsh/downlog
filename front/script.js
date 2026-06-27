@@ -353,7 +353,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     postAndDownload(
-      '/api/scaners',
+      '/api/scaners-formit',
       { scanid: scanid },
       btnScanersFormit,
       statusScanersFormit
@@ -367,7 +367,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     postAndDownload(
-      '/api/scaners',
+      '/api/scaners-logtxt',
       { timestamp: toRFC3339DateOnly(dateLogtxtInput.value) },
       btnScanersLogtxt,
       statusScanersLogtxt
