@@ -292,49 +292,85 @@ window.addEventListener('DOMContentLoaded', () => {
   const scanidInput = document.getElementById('scanid');
   const statusScaners = document.getElementById('status-scaners');
 
+  const btnScanersFormit = document.getElementById('btn-scaners-formit');
+  const scanidFormitInput = document.getElementById('scanid-formit');
+  const statusScanersFormit = document.getElementById('status-scaners-formit');
+
+  const btnScanersLogtxt = document.getElementById('btn-scaners-logtxt');
+  const dateLogtxtInput = document.getElementById('scanid-logtxt');
+  const statusScanersLogtxt = document.getElementById('status-scaners-logtxt');
+
   btnCatalina.addEventListener('click', () => {
-  if (!dateCatalina.value) {
-    setStatus(statusCatalina, 'error', 'Выберите дату');
-    return;
-  }
+    if (!dateCatalina.value) {
+      setStatus(statusCatalina, 'error', 'Выберите дату');
+      return;
+    }
 
-  postAndDownloadMultiple(
-    ['node1', 'node2'],
-    '/api/catalina',
-    { timestamp: toRFC3339DateOnly(dateCatalina.value) },
-    btnCatalina,
-    statusCatalina
-  );
-});
+    postAndDownloadMultiple(
+      ['node1', 'node2'],
+      '/api/catalina',
+      { timestamp: toRFC3339DateOnly(dateCatalina.value) },
+      btnCatalina,
+      statusCatalina
+    );
+  });
 
-btnUniverse.addEventListener('click', () => {
-  if (!dateUniverse.value) {
-    setStatus(statusUniverse, 'error', 'Выберите дату');
-    return;
-  }
+  btnUniverse.addEventListener('click', () => {
+    if (!dateUniverse.value) {
+      setStatus(statusUniverse, 'error', 'Выберите дату');
+      return;
+    }
 
-  postAndDownloadMultiple(
-    ['node1', 'node2'],
-    '/api/universe',
-    { timestamp: toRFC3339DateOnly(dateUniverse.value) },
-    btnUniverse,
-    statusUniverse
-  );
-});
+    postAndDownloadMultiple(
+      ['node1', 'node2'],
+      '/api/universe',
+      { timestamp: toRFC3339DateOnly(dateUniverse.value) },
+      btnUniverse,
+      statusUniverse
+    );
+  });
 
-btnScaners.addEventListener('click', () => {
-  const scanid = scanidInput.value.trim();
-  if (!scanid) {
-    setStatus(statusScaners, 'error', 'Укажите ScanID');
-    return;
-  }
+  btnScaners.addEventListener('click', () => {
+    const scanid = scanidInput.value.trim();
+    if (!scanid) {
+      setStatus(statusScaners, 'error', 'Укажите ScanID');
+      return;
+    }
 
-  postAndDownload(
-    '/api/scaners',
-    { scanid: scanid },
-    btnScaners,
-    statusScaners
-  );
-});
+    postAndDownload(
+      '/api/scaners',
+      { scanid: scanid },
+      btnScaners,
+      statusScaners
+    );
+  });
 
+  btnScanersFormit.addEventListener('click', () => {
+    const scanid = scanidFormitInput.value.trim();
+    if (!scanid) {
+      setStatus(statusScanersFormit, 'error', 'Укажите ScanID');
+      return;
+    }
+
+    postAndDownload(
+      '/api/scaners',
+      { scanid: scanid },
+      btnScanersFormit,
+      statusScanersFormit
+    );
+  });
+
+  btnScanersLogtxt.addEventListener('click', () => {
+    if (!dateLogtxtInput.value) {
+      setStatus(statusScanersLogtxt, 'error', 'Выберите дату');
+      return;
+    }
+
+    postAndDownload(
+      '/api/scaners',
+      { timestamp: toRFC3339DateOnly(dateLogtxtInput.value) },
+      btnScanersLogtxt,
+      statusScanersLogtxt
+    );
+  });
 });
