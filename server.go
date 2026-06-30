@@ -250,7 +250,7 @@ func scanerslogLogtxt(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("🪤 Timestamp: %v", ts)
 
-	files, err := findFiles(ts, cfg.PathLogScanersLogtxt, "Log.txt")
+	files, err := findFiles(ts, cfg.PathLogScanersLogtxt, "Logs.txt")
 	if err != nil {
 		fmt.Println("🪠 Ошибка:", err)
 		http.Error(w, err.Error(), http.StatusBadGateway)
