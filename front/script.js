@@ -18,6 +18,29 @@ const DOWNLOAD_FILENAME_BY_ENDPOINT = {
   '/api/scaners-logtxt': FILE_NAME_API_SCANERS_LOGTXT,
 };
 
+// Формирует безопасный для имени файла фрагмент
+function sanitizeForFilename(s) {
+  return String(s).replace(/[^a-zA-Z0-9._-]/g, '_');
+}
+
+// Строит суффикс из полей передаваемого body, например '-scanid-2026-07-01'
+function buildSuffixFromBody(body) {
+  if (!body || typeof body !== 'object') return '';
+  const parts = [];
+  for (const k in body) {
+    if (!Object.prototype.hasOwnProperty.call(body, k)) continue;
+    const v = body[k];
+    if (v === undefined || v === null) continue;
+    let s = String(v);
+    // Для timestamp/date вырезаем только дату YYYY-MM-DD
+    if (k.toLowerCase().includes('timestamp') || k.toLowerCase().includes('date')) {
+      s = s.substring(0, 10);
+    }
+    parts.push(sanitizeForFilename(s));
+  }
+  return parts.length ? '-' + parts.join('-') : '';
+}
+
 function setStatus(statusEl, type, message) {
   statusEl.classList.remove('status--loading', 'status--success', 'status--error');
   statusEl.innerHTML = '';
@@ -78,7 +101,8 @@ async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
       const m = disposition.match(/filename=\"?([^\"]+)\"?/i);
       const baseName = m ? m[1].replace(/\.(zip|gz|tar)/i, '') : 'files';
       const downloadBase = DOWNLOAD_FILENAME_BY_ENDPOINT[endpoint] || 'files';
-      const filename = `${downloadBase}-${CONTUR}-${node}-${baseName}.zip`;
+      const suffix = buildSuffixFromBody(body);
+      const filename = `${downloadBase}-${CONTUR}-${node}-${baseName}${suffix}.zip`;
 
       const urlBlob = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -186,7 +210,8 @@ async function postAndDownload(endpoint, body, btn, statusEl) {
         const m = disposition.match(/filename="?([^"]+)"?/i);
         const baseName = m ? m[1].replace(/\.zip$/i, "") : "files";
         const downloadBase = DOWNLOAD_FILENAME_BY_ENDPOINT[endpoint] || 'scan';
-        const filename = `${downloadBase}-${baseName}.zip`;
+        const suffix = buildSuffixFromBody(body);
+        const filename = `${downloadBase}-${baseName}${suffix}.zip`;
 
         const urlBlob = URL.createObjectURL(blob);
         const a = document.createElement("a");
