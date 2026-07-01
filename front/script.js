@@ -5,7 +5,18 @@ const NODES = {
 };
 const SCANERS_API_BASE = '/downlog/node03';
 const CONTUR = 'preprod';
-const TIMEOUT_MS = 5000;
+const TIMEOUT_MS = 10000;
+
+// Имена загружаемых архивов, соответствующие REST endpoints
+const FILE_NAME_API_SCANERS = 'scaners';
+const FILE_NAME_API_SCANERS_FORMIT = 'scaners-formit';
+const FILE_NAME_API_SCANERS_LOGTXT = 'scaners-logtxt';
+
+const DOWNLOAD_FILENAME_BY_ENDPOINT = {
+  '/api/scaners': FILE_NAME_API_SCANERS,
+  '/api/scaners-formit': FILE_NAME_API_SCANERS_FORMIT,
+  '/api/scaners-logtxt': FILE_NAME_API_SCANERS_LOGTXT,
+};
 
 function setStatus(statusEl, type, message) {
   statusEl.classList.remove('status--loading', 'status--success', 'status--error');
@@ -28,76 +39,6 @@ function setStatus(statusEl, type, message) {
   }
 }
 
-async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-  try {
-    btn.disabled = true;
-    setStatus(statusEl, 'loading', 'Формирование архивов...');
-
-    const promises = nodes.map(async (node) => {
-      const base = NODES[node];
-      if (!base) {
-        throw new Error(`Неизвестный node: ${node}`);
-      }
-
-      const resp = await fetch(base + endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      });
-
-      if (!resp.ok) {
-        const text = await resp.text().catch(() => '');
-        throw new Error(resp.status === 404 ? 'Backend недоступен' : `${node}: HTTP ${resp.status}${text ? `: ${text}` : ''}`);
-      }
-
-      const blob = await resp.blob();
-      const disposition = resp.headers.get('Content-Disposition') || '';
-      const m = disposition.match(/filename=\"?([^\"]+)\"?/i);
-      const baseName = m ? m[1].replace('.zip', '') : 'files';
-      const filename = `${node}-${baseName}.zip`;
-
-      const urlBlob = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = urlBlob;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(urlBlob);
-
-      return { node, filename };
-    });
-
-    const results = await Promise.allSettled(promises);
-    const errors = results.filter(r => r.status === 'rejected');
-
-    if (errors.length > 0) {
-      const errorMsgs = errors.map(r => r.reason.message).join('; ');
-      throw new Error(errorMsgs);
-    }
-
-    setStatus(
-      statusEl,
-      'success',
-      `Архивы скачаны: ${results.map(r => r.value.filename).join(', ')}`
-    );
-
-  } catch (e) {
-    if (e.name === 'AbortError') {
-      setStatus(statusEl, 'error', 'Таймаут ожидания ответа');
-    } else {
-      console.error(e);
-      setStatus(statusEl, 'error', `Ошибка: ${e.message}`);
-    }
-  } finally {
-    clearTimeout(timeoutId);
-    btn.disabled = false;
-  }
-}
 
 async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
   const controller = new AbortController();
@@ -136,7 +77,8 @@ async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
       const disposition = resp.headers.get('Content-Disposition') || '';
       const m = disposition.match(/filename=\"?([^\"]+)\"?/i);
       const baseName = m ? m[1].replace(/\.(zip|gz|tar)/i, '') : 'files';
-      const filename = `${CONTUR}-${node}-${baseName}.zip`;
+      const downloadBase = DOWNLOAD_FILENAME_BY_ENDPOINT[endpoint] || 'files';
+      const filename = `${downloadBase}-${CONTUR}-${node}-${baseName}.zip`;
 
       const urlBlob = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -243,7 +185,8 @@ async function postAndDownload(endpoint, body, btn, statusEl) {
         const disposition = resp.headers.get("Content-Disposition") || "";
         const m = disposition.match(/filename="?([^"]+)"?/i);
         const baseName = m ? m[1].replace(/\.zip$/i, "") : "files";
-        const filename = `scan-${baseName}.zip`;
+        const downloadBase = DOWNLOAD_FILENAME_BY_ENDPOINT[endpoint] || 'scan';
+        const filename = `${downloadBase}-${baseName}.zip`;
 
         const urlBlob = URL.createObjectURL(blob);
         const a = document.createElement("a");
