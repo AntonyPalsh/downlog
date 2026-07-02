@@ -63,6 +63,28 @@ function setStatus(statusEl, type, message) {
 }
 
 
+async function readErrorMessage(resp, fallback) {
+  const text = await resp.text().catch(() => '');
+  if (!text) {
+    return fallback;
+  }
+
+  const contentType = resp.headers.get('Content-Type') || '';
+  if (contentType.includes('application/json')) {
+    try {
+      const data = JSON.parse(text);
+      if (data && typeof data === 'object') {
+        if (data.error) return data.error;
+        if (data.message) return data.message;
+      }
+    } catch (e) {
+      // ignore invalid JSON and fall back to raw text
+    }
+  }
+
+  return text;
+}
+
 async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -85,8 +107,8 @@ async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
       });
 
       if (!resp.ok) {
-        const text = await resp.text().catch(() => '');
-        throw new Error(resp.status === 404 ? 'Backend недоступен' : `${node}: HTTP ${resp.status} ${resp.statusText}${text ? `: ${text.slice(0, 100)}` : ''}`);
+        const message = await readErrorMessage(resp, `${resp.status} ${resp.statusText}`);
+        throw new Error(resp.status === 404 ? `${node}: ${message || 'Файл не найден'}` : `${node}: HTTP ${resp.status} ${message}`);
       }
 
       const blob = await resp.blob();
@@ -144,6 +166,8 @@ async function postAndDownloadMultiple(nodes, endpoint, body, btn, statusEl) {
         const statusCode = match[2];
         errorMessage = `❌ ${nodeName}: HTTP ${statusCode}\n• 400/422 - неверные параметры запроса\n• 500/502 - ошибка бэкенда\n• 503 - node перегружен`;
       }
+    } else if (e.message.includes('Файл не найден')) {
+      errorMessage = `❌ ${e.message}`;
     } else if (e.message.includes('неожиданный тип файла')) {
       errorMessage = '📄 Бэкенд вернул не ZIP-архив\n• Проверьте endpoint\n• Убедитесь, что сервер возвращает ZIP';
     } else if (e.message.includes('Неизвестный node')) {
@@ -192,8 +216,8 @@ async function postAndDownload(endpoint, body, btn, statusEl) {
         });
 
         if (!resp.ok) {
-            const text = await resp.text().catch(() => "");
-            throw new Error(resp.status === 404 ? 'Backend недоступен' : `HTTP ${resp.status} ${text ? text.slice(0, 100) : ""}`);
+            const message = await readErrorMessage(resp, `${resp.status} ${resp.statusText}`);
+            throw new Error(resp.status === 404 ? message || 'Файл не найден' : `HTTP ${resp.status} ${message}`);
         }
 
         const contentType = resp.headers.get("Content-Type") || "";
@@ -231,6 +255,8 @@ async function postAndDownload(endpoint, body, btn, statusEl) {
             errorMessage = "Таймаут ожидания ответа";
         } else if (e.message && (e.message.includes("Failed to fetch") || e.message.includes("Backend недоступен") || e.message.includes("404"))) {
             errorMessage = "Backend недоступен";
+        } else if (e.message && e.message.includes("Файл не найден")) {
+            errorMessage = `❌ ${e.message}`;
         } else if (e.message && e.message.startsWith("HTTP")) {
             errorMessage = e.message.slice(0, 100);
         } else {
